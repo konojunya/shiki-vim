@@ -135,43 +135,52 @@ export function motionW(
   let { line, col } = cursor;
 
   for (let i = 0; i < count; i++) {
+    // 前の位置を保存（移動できなかった場合に戻る用）
+    const prevLine = line;
+    const prevCol = col;
+
     const text = buffer.getLine(line);
 
+    // すでに行末を超えている場合、次の行へ移動
     if (col >= text.length) {
-      // Move to next line
       if (line < buffer.getLineCount() - 1) {
         line++;
         col = 0;
-        // Skip blank lines are treated as word boundaries
-        const nextText = buffer.getLine(line);
-        if (nextText.length > 0) {
-          col = firstNonBlank(nextText) === 0 ? 0 : 0;
-        }
       }
       continue;
     }
 
     const ch = text[col];
-    // Skip current word (same class characters)
+    // 現在の文字クラスをスキップ（word / punctuation）
     if (isWordChar(ch)) {
       while (col < text.length && isWordChar(text[col])) col++;
     } else if (isPunctuation(ch)) {
       while (col < text.length && isPunctuation(text[col])) col++;
     }
-    // Skip whitespace
+    // 空白をスキップ
     while (col < text.length && (text[col] === " " || text[col] === "\t"))
       col++;
 
-    // If we reached end of line, move to start of next line
-    if (col >= text.length && line < buffer.getLineCount() - 1) {
-      line++;
-      col = 0;
+    // 行末に達した場合、次の行の先頭に移動
+    if (col >= text.length) {
+      if (line < buffer.getLineCount() - 1) {
+        line++;
+        col = 0;
+      } else {
+        // ファイル末尾: 移動できないので前の位置に戻る
+        line = prevLine;
+        col = prevCol;
+        break;
+      }
     }
   }
 
+  // colをバッファ範囲内にクランプ
+  const clampedLine = clampLine(line, buffer);
+  const lineLen = buffer.getLineLength(clampedLine);
   const newCursor = {
-    line: clampLine(line, buffer),
-    col: Math.max(0, col),
+    line: clampedLine,
+    col: lineLen > 0 ? Math.min(Math.max(0, col), lineLen - 1) : 0,
   };
   return {
     cursor: newCursor,
@@ -544,12 +553,18 @@ export function motionMatchBracket(
       c = 0;
     }
   } else {
-    // Search backward
+    // Search backward（閉じ括弧 → 開き括弧を探す）
     let l = cursor.line;
     let c = cursor.col - 1;
+
+    // カーソル位置のcolが0の場合、前の行から検索開始
+    if (c < 0) {
+      l--;
+      c = l >= 0 ? buffer.getLineLength(l) - 1 : -1;
+    }
+
     while (l >= 0) {
       const text = buffer.getLine(l);
-      if (c < 0) c = text.length - 1;
       while (c >= 0) {
         if (text[c] === ch) depth++;
         else if (text[c] === match) depth--;
@@ -568,7 +583,7 @@ export function motionMatchBracket(
         c--;
       }
       l--;
-      c = -1;
+      c = l >= 0 ? buffer.getLineLength(l) - 1 : -1;
     }
   }
 
