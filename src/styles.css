@@ -1,0 +1,162 @@
+/**
+ * ShikiVim エディタのスタイル
+ *
+ * 全クラスは `sv-` プレフィックスを使用して
+ * 外部CSSとの衝突を避ける。
+ *
+ * CSS変数:
+ * --sv-line-height: 行の高さ（デフォルト: 1.5）
+ * --sv-font-family: フォント
+ * --sv-font-size: フォントサイズ
+ * --sv-cursor-color: カーソルの色
+ * --sv-selection-bg: 選択範囲の背景色
+ * --sv-gutter-color: 行番号の文字色
+ * --sv-gutter-bg: 行番号の背景色
+ * --sv-statusline-bg: ステータスラインの背景色
+ * --sv-statusline-fg: ステータスラインの文字色
+ */
+
+/* =====================
+   エディタコンテナ
+   ===================== */
+.sv-container {
+  position: relative;
+  overflow: hidden;
+  font-family: var(--sv-font-family, "Menlo", "Monaco", "Courier New", monospace);
+  font-size: var(--sv-font-size, 14px);
+  line-height: var(--sv-line-height, 1.5);
+  border-radius: 4px;
+  outline: none;
+}
+
+/* フォーカス状態 */
+.sv-container:focus {
+  outline: 2px solid var(--sv-focus-color, #007acc);
+  outline-offset: -2px;
+}
+
+/* =====================
+   コードエリア
+   ===================== */
+.sv-code-area {
+  position: relative;
+  overflow: auto;
+  padding: 8px 0;
+  min-height: 100px;
+}
+
+/* =====================
+   行
+   ===================== */
+.sv-line {
+  display: flex;
+  white-space: pre;
+}
+
+/* 行番号 */
+.sv-line-number {
+  display: inline-block;
+  text-align: right;
+  padding-right: 1ch;
+  color: var(--sv-gutter-color, #858585);
+  background-color: var(--sv-gutter-bg, transparent);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* 行コンテンツ */
+.sv-line-content {
+  flex: 1;
+}
+
+/* =====================
+   トークン
+   ===================== */
+.sv-token {
+  /* Shikiから受け取った color は inline style で設定される */
+}
+
+/* 選択状態のトークン */
+.sv-selected {
+  background-color: var(--sv-selection-bg, rgba(100, 150, 255, 0.3));
+}
+
+/* =====================
+   カーソル
+   ===================== */
+.sv-cursor {
+  position: absolute;
+  top: calc(var(--cursor-line) * 1lh + 8px);
+  left: calc(var(--cursor-col) * 1ch);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ブロックカーソル（ノーマルモード） */
+.sv-cursor-block {
+  width: 1ch;
+  height: 1lh;
+  background-color: var(--sv-cursor-color, rgba(255, 255, 255, 0.6));
+  animation: sv-blink 1s step-start infinite;
+}
+
+/* ラインカーソル（インサートモード） */
+.sv-cursor-line {
+  width: 2px;
+  height: 1lh;
+  background-color: var(--sv-cursor-color, rgba(255, 255, 255, 0.8));
+  animation: sv-blink 1s step-start infinite;
+}
+
+/* カーソル点滅 */
+@keyframes sv-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* =====================
+   ステータスライン
+   ===================== */
+.sv-statusline {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 8px;
+  font-size: 12px;
+  background-color: var(--sv-statusline-bg, #252526);
+  color: var(--sv-statusline-fg, #cccccc);
+  user-select: none;
+}
+
+.sv-statusline-left {
+  display: flex;
+  gap: 8px;
+}
+
+.sv-statusline-right {
+  font-variant-numeric: tabular-nums;
+}
+
+/* モードインジケーター */
+.sv-mode-indicator {
+  font-weight: bold;
+}
+
+.sv-mode-insert {
+  color: #98c379;
+}
+
+.sv-mode-visual,
+.sv-mode-visual-line,
+.sv-mode-visual-block {
+  color: #c678dd;
+}
+
+/* コマンドライン入力 */
+.sv-command-input {
+  font-family: inherit;
+}
+
+.sv-command-cursor {
+  animation: sv-blink 1s step-start infinite;
+}
