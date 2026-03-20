@@ -40,7 +40,7 @@ jobs:
         uses: changesets/action@v1
         with:
           version: bunx changeset version
-          publish: bash -c 'LOCAL=$(node -p "require(\"./package.json\").version") && REMOTE=$(npm view shiki-vim version 2>/dev/null || echo "") && if [ "$LOCAL" = "$REMOTE" ]; then echo "v$LOCAL already published, skipping"; else npm publish --provenance --access public; fi'
+          publish: bash scripts/publish.sh
           title: "chore: release"
           commit: "chore: release"
         env:
