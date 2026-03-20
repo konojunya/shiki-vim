@@ -96,11 +96,13 @@ export default function ShikiVim({
   const totalLines = tokenLines.length;
   const gutterWidth = String(totalLines).length;
 
+  // --- Tab size for rendering and cursor calculation ---
+  const tabSize = indentWidth ?? 4;
+
   // --- Calculate visual column (accounting for tab width) ---
   const visualCol = useMemo(() => {
     const lines = engine.content.split("\n");
     const line = lines[engine.cursor.line] ?? "";
-    const tabSize = 4;
     let col = 0;
     for (let i = 0; i < engine.cursor.col && i < line.length; i++) {
       if (line[i] === "\t") {
@@ -110,7 +112,7 @@ export default function ShikiVim({
       }
     }
     return col;
-  }, [engine.content, engine.cursor.line, engine.cursor.col]);
+  }, [engine.content, engine.cursor.line, engine.cursor.col, tabSize]);
 
   // --- Calculate search match positions per line ---
   // Only highlights while actively typing a search (/ or ?).
@@ -222,7 +224,8 @@ export default function ShikiVim({
       style={{
         backgroundColor: bgColor,
         color: fgColor,
-      }}
+        "--sv-tab-size": String(tabSize),
+      } as React.CSSProperties}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       role="textbox"
