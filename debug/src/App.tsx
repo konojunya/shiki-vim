@@ -327,6 +327,9 @@ export default function App() {
   const [highlighter, setHighlighter] = useState<Highlighter | null>(null);
   const [theme, setTheme] = useState("vitesse-dark");
   const [lang, setLang] = useState("go");
+  const [indentStyle, setIndentStyle] = useState<"tab" | "space">("tab");
+  const [indentWidth, setIndentWidth] = useState(4);
+  const [editorKey, setEditorKey] = useState(0);
   const [code, setCode] = useState(initialCode);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [cssVars, setCssVars] = useState<Record<string, string>>({});
@@ -483,10 +486,40 @@ export default function App() {
           </label>
           <label style={labelStyle}>
             Lang
-            <select value={lang} onChange={(e) => setLang(e.target.value)} style={selectStyle}>
+            <select value={lang} onChange={(e) => {
+              const newLang = e.target.value;
+              setLang(newLang);
+              const isTab = tabLanguages.has(newLang);
+              setIndentStyle(isTab ? "tab" : "space");
+              setIndentWidth(isTab ? 4 : 2);
+              setEditorKey((k) => k + 1);
+            }} style={selectStyle}>
               {langs.map((l) => <option key={l} value={l}>{l}</option>)}
             </select>
           </label>
+          <label style={labelStyle}>
+            Indent
+            <select value={indentStyle} onChange={(e) => {
+              const style = e.target.value as "tab" | "space";
+              setIndentStyle(style);
+              if (style === "tab") setIndentWidth(4);
+              setEditorKey((k) => k + 1);
+            }} style={selectStyle}>
+              <option value="tab">Tab</option>
+              <option value="space">Space</option>
+            </select>
+          </label>
+          {indentStyle === "space" && (
+            <label style={labelStyle}>
+              Width
+              <select value={indentWidth} onChange={(e) => {
+                setIndentWidth(Number(e.target.value));
+                setEditorKey((k) => k + 1);
+              }} style={selectStyle}>
+                {[2, 4, 8].map((w) => <option key={w} value={w}>{w}</option>)}
+              </select>
+            </label>
+          )}
         </div>
 
         <div style={cssVarsSectionStyle}>
@@ -536,6 +569,7 @@ export default function App() {
       {/* Editor */}
       <div style={cssVars as CSSProperties}>
         <ShikiVim
+          key={editorKey}
           content={code}
           highlighter={highlighter}
           lang={lang}
@@ -543,8 +577,8 @@ export default function App() {
           onChange={setCode}
           onYank={(text) => navigator.clipboard.writeText(text)}
           onAction={handleAction}
-          indentStyle={tabLanguages.has(lang) ? "tab" : "space"}
-          indentWidth={tabLanguages.has(lang) ? 4 : 2}
+          indentStyle={indentStyle}
+          indentWidth={indentWidth}
           autoFocus
           className="debug-editor"
         />
