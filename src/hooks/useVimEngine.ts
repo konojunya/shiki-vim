@@ -37,6 +37,8 @@ export interface VimEngineOptions {
   onSave?: (content: string) => void;
   /** Callback when mode changes */
   onModeChange?: (mode: VimMode) => void;
+  /** Callback for every action emitted by the vim engine */
+  onAction?: (action: VimAction, key: string) => void;
 }
 
 /** Return value of useVimEngine */
@@ -74,6 +76,7 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
     onYank,
     onSave,
     onModeChange,
+    onAction,
   } = options;
 
   // TextBuffer is managed via ref (due to frequent mutations)
@@ -100,8 +103,10 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
    * Process the action list and update React state and callbacks.
    */
   const processActions = useCallback(
-    (actions: VimAction[], newCtx: VimContext) => {
+    (actions: VimAction[], newCtx: VimContext, key: string) => {
       for (const action of actions) {
+        onAction?.(action, key);
+
         switch (action.type) {
           case "cursor-move":
             setCursor(action.position);
@@ -147,7 +152,7 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
           : "",
       );
     },
-    [onChange, onYank, onSave, onModeChange],
+    [onChange, onYank, onSave, onModeChange, onAction],
   );
 
   /**
@@ -179,7 +184,7 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
       ctxRef.current = newCtx;
 
       // Process actions
-      processActions(actions, newCtx);
+      processActions(actions, newCtx, e.key);
     },
     [readOnly, processActions],
   );

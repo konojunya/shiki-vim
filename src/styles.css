@@ -27,6 +27,8 @@
   line-height: var(--sv-line-height, 1.5);
   border-radius: 4px;
   outline: none;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Focus state (can be enabled via --sv-focus-color) */
@@ -43,6 +45,7 @@
   overflow: auto;
   padding: 8px 0;
   min-height: 100px;
+  flex: 1;
 }
 
 /* =====================

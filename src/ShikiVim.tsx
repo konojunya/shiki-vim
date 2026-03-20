@@ -50,6 +50,7 @@ export default function ShikiVim({
   onYank,
   onSave,
   onModeChange,
+  onAction,
   className,
   readOnly = false,
   showLineNumbers = true,
@@ -66,6 +67,7 @@ export default function ShikiVim({
     onYank,
     onSave,
     onModeChange,
+    onAction,
   });
 
   // --- Shiki tokenization ---

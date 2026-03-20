@@ -102,6 +102,8 @@ export interface ShikiVimProps {
   onSave?: (content: string) => void;
   /** Called when mode changes */
   onModeChange?: (mode: VimMode) => void;
+  /** Called for every action emitted by the vim engine (useful for debugging) */
+  onAction?: (action: VimAction, key: string) => void;
   /** Additional class name for the container */
   className?: string;
   /** Whether the editor is read-only */
