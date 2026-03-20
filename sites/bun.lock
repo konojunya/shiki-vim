@@ -7,7 +7,7 @@
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "shiki": "^3.0.0",
-        "shiki-vim": "latest",
+        "shiki-vim": "0.2.0",
       },
       "devDependencies": {
         "@types/react": "^19.0.0",
@@ -311,7 +311,7 @@
 
     "shiki": ["shiki@3.23.0", "", { "dependencies": { "@shikijs/core": "3.23.0", "@shikijs/engine-javascript": "3.23.0", "@shikijs/engine-oniguruma": "3.23.0", "@shikijs/langs": "3.23.0", "@shikijs/themes": "3.23.0", "@shikijs/types": "3.23.0", "@shikijs/vscode-textmate": "^10.0.2", "@types/hast": "^3.0.4" } }, "sha512-55Dj73uq9ZXL5zyeRPzHQsK7Nbyt6Y10k5s7OjuFZGMhpp4r/rsLBH0o/0fstIzX1Lep9VxefWljK/SKCzygIA=="],
 
-    "shiki-vim": ["shiki-vim@0.1.0", "", { "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0", "shiki": ">=1.0.0" } }, "sha512-0S+LkqiT6+LMdxeRY0FTjtnbZLQYYKCb9XczIY42DpXZy9o7qrzetuuLllMmLotCaNt2gvyEmhgrNmd3o/pfZQ=="],
+    "shiki-vim": ["shiki-vim@0.2.0", "", { "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0", "shiki": ">=1.0.0" } }, "sha512-WNwrCGK8srPlq41iU6D5gf6fhhLW54Wwi3l1AyhK0NImtme6u+iobFCJj0my4WryhAE0IKgx8G9lu+Ilf5pgUg=="],
 
     "source-map-js": ["source-map-js@1.2.1", "", {}, "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="],
 
