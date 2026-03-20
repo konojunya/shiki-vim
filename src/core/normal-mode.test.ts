@@ -300,6 +300,34 @@ describe("Normal mode", () => {
       pressKeys(["p"], ctx, buffer);
       expect(buffer.getContent()).toBe("hello");
     });
+
+    it("pastes multi-line register line-wise with p and keeps buffer lines in sync", () => {
+      const buffer = new TextBuffer("above\nbelow");
+      const ctx = createTestContext(
+        { line: 0, col: 0 },
+        { register: "line1\nline2\nline3\n" },
+      );
+      const { ctx: result } = pressKeys(["p"], ctx, buffer);
+      expect(buffer.getContent()).toBe("above\nline1\nline2\nline3\nbelow");
+      expect(buffer.getLineCount()).toBe(5);
+      expect(result.cursor).toEqual({ line: 1, col: 0 });
+      // dd on the pasted line should delete exactly that line
+      const { ctx: afterDd } = pressKeys(["d", "d"], result, buffer);
+      expect(buffer.getContent()).toBe("above\nline2\nline3\nbelow");
+      expect(afterDd.cursor).toEqual({ line: 1, col: 0 });
+    });
+
+    it("pastes multi-line register line-wise with P and keeps buffer lines in sync", () => {
+      const buffer = new TextBuffer("above\nbelow");
+      const ctx = createTestContext(
+        { line: 1, col: 0 },
+        { register: "line1\nline2\n" },
+      );
+      const { ctx: result } = pressKeys(["P"], ctx, buffer);
+      expect(buffer.getContent()).toBe("above\nline1\nline2\nbelow");
+      expect(buffer.getLineCount()).toBe(4);
+      expect(result.cursor).toEqual({ line: 1, col: 0 });
+    });
   });
 
   // ---------------------------------------------------

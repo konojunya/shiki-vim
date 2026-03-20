@@ -518,9 +518,11 @@ function handlePasteAfter(
 
   // Line-wise paste (when the register ends with a newline)
   if (ctx.register.endsWith("\n")) {
-    const text = ctx.register.slice(0, -1);
+    const lines = ctx.register.slice(0, -1).split("\n");
     for (let i = 0; i < count; i++) {
-      buffer.insertLine(ctx.cursor.line + 1, text);
+      for (let j = lines.length - 1; j >= 0; j--) {
+        buffer.insertLine(ctx.cursor.line + 1, lines[j]);
+      }
     }
     const newCursor = { line: ctx.cursor.line + 1, col: 0 };
     return {
@@ -563,9 +565,11 @@ function handlePasteBefore(
   buffer.saveUndoPoint(ctx.cursor);
 
   if (ctx.register.endsWith("\n")) {
-    const text = ctx.register.slice(0, -1);
+    const lines = ctx.register.slice(0, -1).split("\n");
     for (let i = 0; i < count; i++) {
-      buffer.insertLine(ctx.cursor.line, text);
+      for (let j = lines.length - 1; j >= 0; j--) {
+        buffer.insertLine(ctx.cursor.line, lines[j]);
+      }
     }
     const newCursor = { line: ctx.cursor.line, col: 0 };
     return {
