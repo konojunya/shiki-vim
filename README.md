@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="sites/public/ogp.png" alt="shiki-vim" width="100%" />
+  <img src="sites/public/ogp.png" alt="shiki-vim" width="100%" style="border-radius: 16px;" />
 </p>
 
 <h1 align="center">shiki-vim</h1>
@@ -10,7 +10,6 @@
 
 <p align="center">
   <a href="https://shiki-vim.0xjj.dev">Documentation</a> ·
-  <a href="https://shiki-vim.0xjj.dev/#playground">Playground</a> ·
   <a href="https://www.npmjs.com/package/shiki-vim">npm</a>
 </p>
 
