@@ -1,6 +1,6 @@
 {
   "name": "react.vim",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A vim-like lightweight code editor React component powered by Shiki",
   "type": "module",
   "main": "./dist/index.cjs",
