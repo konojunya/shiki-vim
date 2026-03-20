@@ -280,7 +280,7 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
 function shouldPreventDefault(e: React.KeyboardEvent): boolean {
   // Ctrl key combinations
   if (e.ctrlKey) {
-    const ctrlKeys = ["r", "b", "f", "d", "u"];
+    const ctrlKeys = ["r", "b", "f", "d", "u", "v"];
     if (ctrlKeys.includes(e.key)) return true;
   }
 

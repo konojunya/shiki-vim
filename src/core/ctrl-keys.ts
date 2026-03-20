@@ -36,6 +36,8 @@ export function handleCtrlKey(
       return handleCtrlU(ctx);
     case "d":
       return handleCtrlD(ctx);
+    case "v":
+      return handleCtrlV(ctx);
     default:
       return { newCtx: ctx, actions: [] };
   }
@@ -117,5 +119,43 @@ function handleCtrlD(ctx: VimContext): KeystrokeResult {
   return {
     newCtx: { ...ctx, count: 0, statusMessage: "" },
     actions: [{ type: "scroll", direction: "down", amount: 0.5 }],
+  };
+}
+
+/**
+ * Ctrl-V: Enter visual-block mode (or toggle if already in visual)
+ */
+function handleCtrlV(ctx: VimContext): KeystrokeResult {
+  if (ctx.mode === "visual-block") {
+    // Toggle off -> normal
+    return {
+      newCtx: {
+        ...ctx,
+        mode: "normal",
+        phase: "idle",
+        count: 0,
+        visualAnchor: null,
+        statusMessage: "",
+      },
+      actions: [{ type: "mode-change", mode: "normal" }],
+    };
+  }
+
+  // Enter visual-block (from normal, visual, or visual-line)
+  const anchor =
+    ctx.mode === "visual" || ctx.mode === "visual-line"
+      ? ctx.visualAnchor ?? { ...ctx.cursor }
+      : { ...ctx.cursor };
+
+  return {
+    newCtx: {
+      ...ctx,
+      mode: "visual-block",
+      phase: "idle",
+      count: 0,
+      visualAnchor: anchor,
+      statusMessage: "-- VISUAL BLOCK --",
+    },
+    actions: [{ type: "mode-change", mode: "visual-block" }],
   };
 }

@@ -332,4 +332,137 @@ describe("Visual mode", () => {
       expect(result.mode).toBe("visual");
     });
   });
+
+  // ---------------------------------------------------
+  // Visual block mode (Ctrl-V)
+  // ---------------------------------------------------
+  describe("Visual block mode", () => {
+    function createBlockContext(
+      cursor: CursorPosition,
+      anchor: CursorPosition,
+      overrides?: Partial<VimContext>,
+    ): VimContext {
+      return {
+        ...createInitialContext(cursor),
+        mode: "visual-block",
+        visualAnchor: { ...anchor },
+        statusMessage: "-- VISUAL BLOCK --",
+        ...overrides,
+      };
+    }
+
+    it("enters visual-block mode with Ctrl-V", () => {
+      const buffer = new TextBuffer("hello\nworld");
+      const ctx = createInitialContext({ line: 0, col: 0 });
+      const result = processKeystroke("v", ctx, buffer, true); // ctrlKey=true
+      expect(result.newCtx.mode).toBe("visual-block");
+      expect(result.newCtx.statusMessage).toBe("-- VISUAL BLOCK --");
+      expect(result.newCtx.visualAnchor).toEqual({ line: 0, col: 0 });
+    });
+
+    it("exits visual-block with Ctrl-V again", () => {
+      const buffer = new TextBuffer("hello\nworld");
+      const ctx = createBlockContext({ line: 1, col: 2 }, { line: 0, col: 0 });
+      const result = processKeystroke("v", ctx, buffer, true);
+      expect(result.newCtx.mode).toBe("normal");
+      expect(result.newCtx.visualAnchor).toBeNull();
+    });
+
+    it("exits visual-block with Escape", () => {
+      const buffer = new TextBuffer("hello\nworld");
+      const ctx = createBlockContext({ line: 1, col: 2 }, { line: 0, col: 0 });
+      const result = processKeystroke("Escape", ctx, buffer);
+      expect(result.newCtx.mode).toBe("normal");
+    });
+
+    it("motions move the cursor in visual-block", () => {
+      const buffer = new TextBuffer("hello\nworld\nfoo");
+      const ctx = createBlockContext({ line: 0, col: 0 }, { line: 0, col: 0 });
+      const { ctx: result } = pressKeys(["j", "l", "l"], ctx, buffer);
+      expect(result.cursor).toEqual({ line: 1, col: 2 });
+      expect(result.visualAnchor).toEqual({ line: 0, col: 0 });
+    });
+
+    it("d deletes the rectangular block", () => {
+      const buffer = new TextBuffer("abcde\nfghij\nklmno");
+      // Select columns 1-3 on lines 0-1
+      const ctx = createBlockContext(
+        { line: 1, col: 3 },
+        { line: 0, col: 1 },
+      );
+      const { ctx: result } = pressKeys(["d"], ctx, buffer);
+      expect(buffer.getLine(0)).toBe("ae");
+      expect(buffer.getLine(1)).toBe("fj");
+      expect(buffer.getLine(2)).toBe("klmno"); // unaffected
+      expect(result.mode).toBe("normal");
+      expect(result.register).toBe("bcd\nghi");
+    });
+
+    it("y yanks the rectangular block without modifying buffer", () => {
+      const buffer = new TextBuffer("abcde\nfghij\nklmno");
+      const ctx = createBlockContext(
+        { line: 2, col: 2 },
+        { line: 0, col: 1 },
+      );
+      const { ctx: result } = pressKeys(["y"], ctx, buffer);
+      expect(buffer.getContent()).toBe("abcde\nfghij\nklmno");
+      expect(result.register).toBe("bc\ngh\nlm");
+      expect(result.mode).toBe("normal");
+    });
+
+    it("c deletes the block and enters insert mode", () => {
+      const buffer = new TextBuffer("abcde\nfghij");
+      const ctx = createBlockContext(
+        { line: 1, col: 2 },
+        { line: 0, col: 1 },
+      );
+      const { ctx: result } = pressKeys(["c"], ctx, buffer);
+      expect(buffer.getLine(0)).toBe("ade");
+      expect(buffer.getLine(1)).toBe("fij");
+      expect(result.mode).toBe("insert");
+      expect(result.register).toBe("bc\ngh");
+    });
+
+    it("o swaps anchor and cursor", () => {
+      const buffer = new TextBuffer("abcde\nfghij");
+      const ctx = createBlockContext(
+        { line: 1, col: 3 },
+        { line: 0, col: 1 },
+      );
+      const { ctx: result } = pressKeys(["o"], ctx, buffer);
+      expect(result.cursor).toEqual({ line: 0, col: 1 });
+      expect(result.visualAnchor).toEqual({ line: 1, col: 3 });
+    });
+
+    it("switches from visual to visual-block with Ctrl-V", () => {
+      const buffer = new TextBuffer("hello\nworld");
+      const ctx = createVisualContext(
+        { line: 0, col: 3 },
+        { line: 0, col: 0 },
+      );
+      const result = processKeystroke("v", ctx, buffer, true);
+      expect(result.newCtx.mode).toBe("visual-block");
+      expect(result.newCtx.visualAnchor).toEqual({ line: 0, col: 0 });
+    });
+
+    it("switches from visual-block to visual with v", () => {
+      const buffer = new TextBuffer("hello\nworld");
+      const ctx = createBlockContext(
+        { line: 1, col: 3 },
+        { line: 0, col: 0 },
+      );
+      const result = processKeystroke("v", ctx, buffer);
+      expect(result.newCtx.mode).toBe("visual");
+    });
+
+    it("switches from visual-block to visual-line with V", () => {
+      const buffer = new TextBuffer("hello\nworld");
+      const ctx = createBlockContext(
+        { line: 1, col: 3 },
+        { line: 0, col: 0 },
+      );
+      const result = processKeystroke("V", ctx, buffer);
+      expect(result.newCtx.mode).toBe("visual-line");
+    });
+  });
 });

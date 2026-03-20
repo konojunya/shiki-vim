@@ -119,6 +119,7 @@ export function processKeystroke(
       return processInsertMode(key, ctx, buffer, ctrlKey);
     case "visual":
     case "visual-line":
+    case "visual-block":
       return processVisualMode(key, ctx, buffer, ctrlKey, readOnly);
     case "command-line":
       return processCommandLineMode(key, ctx, buffer);

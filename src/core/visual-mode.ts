@@ -141,6 +141,20 @@ export function processVisualMode(
       : switchVisualSubMode(ctx, "visual-line");
   }
 
+  // --- o: swap anchor and cursor ---
+  if (key === "o") {
+    if (ctx.visualAnchor) {
+      return {
+        newCtx: {
+          ...ctx,
+          cursor: ctx.visualAnchor,
+          visualAnchor: ctx.cursor,
+        },
+        actions: [{ type: "cursor-move", position: ctx.visualAnchor }],
+      };
+    }
+  }
+
   return { newCtx: ctx, actions: [] };
 }
 
@@ -163,10 +177,14 @@ function exitVisualMode(ctx: VimContext): KeystrokeResult {
  */
 function switchVisualSubMode(
   ctx: VimContext,
-  mode: "visual" | "visual-line",
+  mode: "visual" | "visual-line" | "visual-block",
 ): KeystrokeResult {
-  const statusMessage =
-    mode === "visual" ? "-- VISUAL --" : "-- VISUAL LINE --";
+  const statusMessages: Record<string, string> = {
+    visual: "-- VISUAL --",
+    "visual-line": "-- VISUAL LINE --",
+    "visual-block": "-- VISUAL BLOCK --",
+  };
+  const statusMessage = statusMessages[mode];
 
   return {
     newCtx: { ...ctx, mode, statusMessage },
@@ -224,6 +242,10 @@ function executeVisualOperator(
   // x behaves the same as d
   const operator: Operator = key === "x" ? "d" : (key as Operator);
 
+  if (ctx.mode === "visual-block") {
+    return executeVisualBlockOperator(operator, ctx, buffer);
+  }
+
   // Normalize the selection range (start <= end)
   const { start, end } = normalizeSelection(ctx.visualAnchor, ctx.cursor);
   const isLinewise = ctx.mode === "visual-line";
@@ -253,6 +275,81 @@ function executeVisualOperator(
       ...result.actions,
       { type: "cursor-move", position: result.newCursor },
       { type: "mode-change", mode: result.newMode },
+    ],
+  };
+}
+
+/**
+ * Execute an operator on a visual-block (rectangular) selection.
+ * Operates column-by-column on each line in the block.
+ */
+function executeVisualBlockOperator(
+  operator: Operator,
+  ctx: VimContext,
+  buffer: TextBuffer,
+): KeystrokeResult {
+  const anchor = ctx.visualAnchor!;
+  const startLine = Math.min(anchor.line, ctx.cursor.line);
+  const endLine = Math.max(anchor.line, ctx.cursor.line);
+  const startCol = Math.min(anchor.col, ctx.cursor.col);
+  const endCol = Math.max(anchor.col, ctx.cursor.col);
+
+  // Collect yanked text (each line's block portion, joined by newlines)
+  const yankLines: string[] = [];
+  for (let l = startLine; l <= endLine; l++) {
+    const line = buffer.getLine(l);
+    yankLines.push(line.slice(startCol, endCol + 1));
+  }
+  const yankedText = yankLines.join("\n");
+
+  const actions: import("../types").VimAction[] = [
+    { type: "yank", text: yankedText },
+  ];
+
+  if (operator === "y") {
+    const newCursor = { line: startLine, col: startCol };
+    return {
+      newCtx: {
+        ...resetContext(ctx),
+        mode: "normal",
+        cursor: newCursor,
+        register: yankedText,
+        visualAnchor: null,
+      },
+      actions: [
+        ...actions,
+        { type: "cursor-move", position: newCursor },
+        { type: "mode-change", mode: "normal" },
+      ],
+    };
+  }
+
+  // d / c: delete the block region from each line
+  for (let l = endLine; l >= startLine; l--) {
+    const line = buffer.getLine(l);
+    const before = line.slice(0, startCol);
+    const after = line.slice(endCol + 1);
+    buffer.setLine(l, before + after);
+  }
+
+  actions.push({ type: "content-change", content: buffer.getContent() });
+
+  const newCursor = { line: startLine, col: startCol };
+  const newMode = operator === "c" ? "insert" : "normal";
+
+  return {
+    newCtx: {
+      ...resetContext(ctx),
+      mode: newMode as import("../types").VimMode,
+      cursor: newCursor,
+      register: yankedText,
+      visualAnchor: null,
+      statusMessage: newMode === "insert" ? "-- INSERT --" : "",
+    },
+    actions: [
+      ...actions,
+      { type: "cursor-move", position: newCursor },
+      { type: "mode-change", mode: newMode as import("../types").VimMode },
     ],
   };
 }

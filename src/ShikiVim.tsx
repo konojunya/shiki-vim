@@ -292,7 +292,7 @@ function computeSelectionInfo(
   _totalLines: number,
 ): SelectionInfo {
   // No selection if not in visual mode
-  if ((mode !== "visual" && mode !== "visual-line") || !anchor) {
+  if ((mode !== "visual" && mode !== "visual-line" && mode !== "visual-block") || !anchor) {
     return {
       isLineSelected: () => false,
       getSelectionStartCol: () => undefined,
@@ -320,6 +320,18 @@ function computeSelectionInfo(
         lineIndex >= startLine && lineIndex <= endLine,
       getSelectionStartCol: () => undefined,
       getSelectionEndCol: () => undefined,
+    };
+  }
+
+  // visual-block (rectangular selection)
+  if (mode === "visual-block") {
+    const blockStartCol = Math.min(anchor.col, cursor.col);
+    const blockEndCol = Math.max(anchor.col, cursor.col) + 1;
+    return {
+      isLineSelected: (lineIndex) =>
+        lineIndex >= startLine && lineIndex <= endLine,
+      getSelectionStartCol: () => blockStartCol,
+      getSelectionEndCol: () => blockEndCol,
     };
   }
 
