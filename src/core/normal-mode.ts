@@ -49,6 +49,32 @@ function indentOpts(ctx: VimContext) {
 }
 
 /**
+ * Store yanked text into the appropriate register(s).
+ * Always updates the unnamed register. If selectedRegister is set,
+ * also stores in the named register and clears the selection.
+ */
+function storeRegister(ctx: VimContext, text: string): Partial<VimContext> {
+  const result: Partial<VimContext> = { register: text };
+  if (ctx.selectedRegister) {
+    result.registers = {
+      ...ctx.registers,
+      [ctx.selectedRegister]: text,
+    };
+  }
+  return result;
+}
+
+/**
+ * Get the text from the active register (selected or unnamed).
+ */
+function getRegisterText(ctx: VimContext): string {
+  if (ctx.selectedRegister) {
+    return ctx.registers[ctx.selectedRegister] ?? "";
+  }
+  return ctx.register;
+}
+
+/**
  * Main handler for normal mode.
  * Receives a keystroke and returns state transitions and actions.
  */
@@ -59,6 +85,11 @@ export function processNormalMode(
   ctrlKey: boolean,
   readOnly: boolean = false,
 ): KeystrokeResult {
+  // --- Register pending ("x) ---
+  if (ctx.phase === "register-pending") {
+    return handleRegisterPending(key, ctx);
+  }
+
   // --- g prefix pending ---
   if (ctx.phase === "g-pending") {
     return handleGPending(key, ctx, buffer);
@@ -100,6 +131,14 @@ export function processNormalMode(
   // --- Count input ---
   if (isCountKey(key, ctx)) {
     return accumulateCount(key, ctx);
+  }
+
+  // --- Register prefix ("x) ---
+  if (key === '"') {
+    return {
+      newCtx: { ...ctx, phase: "register-pending" },
+      actions: [],
+    };
   }
 
   // --- Key processing during operator-pending ---
@@ -225,6 +264,28 @@ export function processNormalMode(
  * Key processing during text-object-pending state.
  * Receives the object key (w, W, ", ', (, {, [, etc.) and executes the operator.
  */
+/**
+ * Handle register name input after " prefix.
+ * Valid register names: a-z (named), " (unnamed).
+ */
+function handleRegisterPending(
+  key: string,
+  ctx: VimContext,
+): KeystrokeResult {
+  if (/^[a-z"]$/i.test(key)) {
+    return {
+      newCtx: {
+        ...ctx,
+        phase: "idle",
+        selectedRegister: key === '"' ? null : key.toLowerCase(),
+      },
+      actions: [],
+    };
+  }
+  // Invalid register name -> reset
+  return { newCtx: resetContext(ctx), actions: [] };
+}
+
 function handleTextObjectPending(
   key: string,
   ctx: VimContext,
@@ -247,7 +308,7 @@ function handleTextObjectPending(
         ...resetContext(ctx),
         mode: result.newMode,
         cursor: result.newCursor,
-        register: result.yankedText,
+        ...storeRegister(ctx, result.yankedText),
         statusMessage: result.newMode === "insert"
           ? "-- INSERT --"
           : result.statusMessage || "",
@@ -290,7 +351,7 @@ function handleGPending(
           ...resetContext(ctx),
           mode: opResult.newMode,
           cursor: opResult.newCursor,
-          register: opResult.yankedText,
+          ...storeRegister(ctx, opResult.yankedText),
           statusMessage: opResult.statusMessage,
         },
         actions: [
@@ -344,7 +405,7 @@ function handleOperatorPending(
         ...resetContext(ctx),
         mode: result.newMode,
         cursor: result.newCursor,
-        register: result.yankedText,
+        ...storeRegister(ctx, result.yankedText),
         statusMessage: result.statusMessage,
       },
       actions: [
@@ -394,7 +455,7 @@ function handleOperatorPending(
           ...resetContext(ctx),
           mode: result.newMode,
           cursor: result.newCursor,
-          register: result.yankedText,
+          ...storeRegister(ctx, result.yankedText),
           statusMessage: result.statusMessage,
         },
         actions: [
@@ -437,7 +498,7 @@ function handleOperatorPending(
         ...resetContext(ctx),
         mode: result.newMode,
         cursor: result.newCursor,
-        register: result.yankedText,
+        ...storeRegister(ctx, result.yankedText),
         statusMessage: result.statusMessage,
       },
       actions: [
@@ -711,7 +772,7 @@ function handleDeleteChar(
   return {
     newCtx: {
       ...resetContext(ctx),
-      register: deleted,
+      ...storeRegister(ctx, deleted),
       cursor: newCursor,
     },
     actions: [
@@ -730,13 +791,14 @@ function handlePasteAfter(
   buffer: TextBuffer,
   count: number,
 ): KeystrokeResult {
-  if (!ctx.register) return { newCtx: ctx, actions: [] };
+  const text = getRegisterText(ctx);
+  if (!text) return { newCtx: resetContext(ctx), actions: [] };
 
   buffer.saveUndoPoint(ctx.cursor);
 
   // Line-wise paste (when the register ends with a newline)
-  if (ctx.register.endsWith("\n")) {
-    const lines = ctx.register.slice(0, -1).split("\n");
+  if (text.endsWith("\n")) {
+    const lines = text.slice(0, -1).split("\n");
     const totalLines = lines.length * count;
     for (let i = 0; i < count; i++) {
       for (let j = lines.length - 1; j >= 0; j--) {
@@ -760,11 +822,11 @@ function handlePasteAfter(
   // Character-wise paste
   const col = ctx.cursor.col + 1;
   for (let i = 0; i < count; i++) {
-    buffer.insertAt(ctx.cursor.line, col, ctx.register);
+    buffer.insertAt(ctx.cursor.line, col, text);
   }
   const newCursor = {
     line: ctx.cursor.line,
-    col: col + ctx.register.length * count - 1,
+    col: col + text.length * count - 1,
   };
   return {
     newCtx: { ...resetContext(ctx), cursor: newCursor },
@@ -783,12 +845,13 @@ function handlePasteBefore(
   buffer: TextBuffer,
   count: number,
 ): KeystrokeResult {
-  if (!ctx.register) return { newCtx: ctx, actions: [] };
+  const text = getRegisterText(ctx);
+  if (!text) return { newCtx: resetContext(ctx), actions: [] };
 
   buffer.saveUndoPoint(ctx.cursor);
 
-  if (ctx.register.endsWith("\n")) {
-    const lines = ctx.register.slice(0, -1).split("\n");
+  if (text.endsWith("\n")) {
+    const lines = text.slice(0, -1).split("\n");
     const totalLines = lines.length * count;
     for (let i = 0; i < count; i++) {
       for (let j = lines.length - 1; j >= 0; j--) {
@@ -810,11 +873,11 @@ function handlePasteBefore(
   }
 
   for (let i = 0; i < count; i++) {
-    buffer.insertAt(ctx.cursor.line, ctx.cursor.col, ctx.register);
+    buffer.insertAt(ctx.cursor.line, ctx.cursor.col, text);
   }
   const newCursor = {
     line: ctx.cursor.line,
-    col: ctx.cursor.col + ctx.register.length * count - 1,
+    col: ctx.cursor.col + text.length * count - 1,
   };
   return {
     newCtx: { ...resetContext(ctx), cursor: newCursor },

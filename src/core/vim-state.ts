@@ -47,6 +47,8 @@ export function createInitialContext(
     cursor,
     visualAnchor: null,
     register: "",
+    registers: {},
+    selectedRegister: null,
     commandBuffer: "",
     commandType: null,
     lastSearch: "",

@@ -1032,6 +1032,74 @@ describe("Normal mode", () => {
   });
 
   // ---------------------------------------------------
+  // Named registers ("a-"z)
+  // ---------------------------------------------------
+  describe('Named registers ("x)', () => {
+    it('"ayy stores in register a, "ap pastes from it', () => {
+      const buffer = new TextBuffer("hello\nworld\nfoo");
+      const ctx = createTestContext({ line: 0, col: 0 });
+      // "ayy -> yank line into register a
+      const { ctx: afterYank } = pressKeys(['"', "a", "y", "y"], ctx, buffer);
+      expect(afterYank.registers.a).toBe("hello\n");
+      expect(afterYank.register).toBe("hello\n"); // also in unnamed
+      // yy on line 1 -> overwrites unnamed register
+      const { ctx: afterYy } = pressKeys(["j", "y", "y"], afterYank, buffer);
+      expect(afterYy.register).toBe("world\n");
+      // "ap -> paste from register a (not the unnamed)
+      const { ctx: moved } = pressKeys(["j"], afterYy, buffer);
+      pressKeys(['"', "a", "p"], moved, buffer);
+      expect(buffer.getContent()).toBe("hello\nworld\nfoo\nhello");
+    });
+
+    it('"bdd stores deleted line in register b', () => {
+      const buffer = new TextBuffer("aaa\nbbb\nccc");
+      const ctx = createTestContext({ line: 1, col: 0 });
+      const { ctx: afterDd } = pressKeys(['"', "b", "d", "d"], ctx, buffer);
+      expect(buffer.getContent()).toBe("aaa\nccc");
+      expect(afterDd.registers.b).toBe("bbb\n");
+      expect(afterDd.register).toBe("bbb\n");
+    });
+
+    it('"bp pastes from register b', () => {
+      const buffer = new TextBuffer("ab");
+      const ctx = createTestContext(
+        { line: 0, col: 0 },
+        { registers: { b: "X" } },
+      );
+      pressKeys(['"', "b", "p"], ctx, buffer);
+      expect(buffer.getContent()).toBe("aXb");
+    });
+
+    it("regular p uses unnamed register, not named", () => {
+      const buffer = new TextBuffer("test");
+      const ctx = createTestContext(
+        { line: 0, col: 3 },
+        { register: "!", registers: { a: "named" } },
+      );
+      pressKeys(["p"], ctx, buffer);
+      expect(buffer.getContent()).toBe("test!");
+    });
+
+    it('"" selects the unnamed register explicitly', () => {
+      const buffer = new TextBuffer("test");
+      const ctx = createTestContext(
+        { line: 0, col: 3 },
+        { register: "!", registers: { a: "named" } },
+      );
+      pressKeys(['"', '"', "p"], ctx, buffer);
+      expect(buffer.getContent()).toBe("test!");
+    });
+
+    it("invalid register name resets state", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createTestContext({ line: 0, col: 0 });
+      const { ctx: result } = pressKeys(['"', "1"], ctx, buffer);
+      expect(result.phase).toBe("idle");
+      expect(result.selectedRegister).toBeNull();
+    });
+  });
+
+  // ---------------------------------------------------
   // . (dot repeat)
   // ---------------------------------------------------
   describe(". command (dot repeat)", () => {

@@ -130,6 +130,7 @@ export function resetContext(ctx: VimContext): VimContext {
     operator: null,
     charCommand: null,
     textObjectModifier: null,
+    selectedRegister: null,
     statusMessage: "",
   };
 }

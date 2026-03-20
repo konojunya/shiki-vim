@@ -27,7 +27,8 @@ export type CommandPhase =
   | "operator-pending"
   | "char-pending"
   | "g-pending"
-  | "text-object-pending";
+  | "text-object-pending"
+  | "register-pending";
 
 /**
  * Vim operators
@@ -49,7 +50,12 @@ export interface VimContext {
   operator: Operator | null;
   cursor: CursorPosition;
   visualAnchor: CursorPosition | null;
+  /** Unnamed register (default yank/delete destination) */
   register: string;
+  /** Named registers (a-z) */
+  registers: Record<string, string>;
+  /** Currently selected register via " prefix (null = unnamed) */
+  selectedRegister: string | null;
   commandBuffer: string;
   commandType: ":" | "/" | "?" | null;
   lastSearch: string;
