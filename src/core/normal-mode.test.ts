@@ -1194,6 +1194,77 @@ describe("Normal mode", () => {
   // ---------------------------------------------------
   // Reset on unmatched key
   // ---------------------------------------------------
+  // ---------------------------------------------------
+  // Macro recording & playback
+  // ---------------------------------------------------
+  describe("Macro recording & playback", () => {
+    it("qa starts recording, q stops, @a replays", () => {
+      const buffer = new TextBuffer("aaa\nbbb\nccc");
+      const ctx = createTestContext({ line: 0, col: 0 });
+      // qa -> start recording into a
+      const { ctx: recording } = pressKeys(["q", "a"], ctx, buffer);
+      expect(recording.macroRecording).toBe("a");
+      expect(recording.statusMessage).toBe("recording @a");
+      // dd -> delete line (recorded)
+      const { ctx: afterDd } = pressKeys(["d", "d"], recording, buffer);
+      expect(buffer.getContent()).toBe("bbb\nccc");
+      expect(afterDd.statusMessage).toBe("recording @a");
+      // q -> stop recording
+      const { ctx: stopped } = pressKeys(["q"], afterDd, buffer);
+      expect(stopped.macroRecording).toBeNull();
+      expect(stopped.statusMessage).toBe("");
+      expect(stopped.macros.a).toEqual(["d", "d"]);
+      // @a -> replay (deletes another line)
+      pressKeys(["@", "a"], stopped, buffer);
+      expect(buffer.getContent()).toBe("ccc");
+    });
+
+    it("@@ replays the last executed macro", () => {
+      const buffer = new TextBuffer("aaa\nbbb\nccc\nddd");
+      const ctx = createTestContext({ line: 0, col: 0 });
+      // Record macro: dd
+      const { ctx: afterRecord } = pressKeys(["q", "a", "d", "d", "q"], ctx, buffer);
+      expect(buffer.getContent()).toBe("bbb\nccc\nddd");
+      // @a -> replay
+      const { ctx: afterAt } = pressKeys(["@", "a"], afterRecord, buffer);
+      expect(buffer.getContent()).toBe("ccc\nddd");
+      expect(afterAt.lastMacro).toBe("a");
+      // @@ -> replay last
+      pressKeys(["@", "@"], afterAt, buffer);
+      expect(buffer.getContent()).toBe("ddd");
+    });
+
+    it("macro with insert mode: qaihello<Esc>q then @a", () => {
+      const buffer = new TextBuffer("world\nworld");
+      const ctx = createTestContext({ line: 0, col: 0 });
+      // Record: ihello<Esc>
+      const { ctx: afterRecord } = pressKeys(
+        ["q", "a", "i", "h", "i", "Escape", "q"],
+        ctx,
+        buffer,
+      );
+      expect(buffer.getContent()).toBe("hiworld\nworld");
+      // Move to next line and replay
+      const { ctx: onLine1 } = pressKeys(["j", "0"], afterRecord, buffer);
+      pressKeys(["@", "a"], onLine1, buffer);
+      expect(buffer.getContent()).toBe("hiworld\nhiworld");
+    });
+
+    it("@a does nothing when macro is empty/unrecorded", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createTestContext({ line: 0, col: 0 });
+      pressKeys(["@", "a"], ctx, buffer);
+      expect(buffer.getContent()).toBe("hello");
+    });
+
+    it("@@ does nothing when no macro was executed before", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createTestContext({ line: 0, col: 0 });
+      pressKeys(["@", "@"], ctx, buffer);
+      expect(buffer.getContent()).toBe("hello");
+    });
+  });
+
   describe("Unknown key", () => {
     it("resets context on unrecognized key", () => {
       const buffer = new TextBuffer("hello");

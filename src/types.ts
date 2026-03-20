@@ -28,7 +28,9 @@ export type CommandPhase =
   | "char-pending"
   | "g-pending"
   | "text-object-pending"
-  | "register-pending";
+  | "register-pending"
+  | "macro-register-pending"
+  | "macro-execute-pending";
 
 /**
  * Vim operators
@@ -79,6 +81,12 @@ export interface VimContext {
     col: number;
     cursorAtInsertStart: CursorPosition;
   } | null;
+  /** Register currently being recorded into (null = not recording) */
+  macroRecording: string | null;
+  /** Recorded macro key sequences */
+  macros: Record<string, string[]>;
+  /** Last executed macro register name (for @@) */
+  lastMacro: string | null;
   /** First visible line in the viewport (0-based) */
   viewportTopLine: number;
   /** Number of visible lines in the viewport */

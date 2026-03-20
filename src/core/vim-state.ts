@@ -58,6 +58,9 @@ export function createInitialContext(
     textObjectModifier: null,
     lastChange: [],
     pendingChange: [],
+    macroRecording: null,
+    macros: {},
+    lastMacro: null,
     blockInsert: null,
     statusMessage: "",
     indentStyle: opts?.indentStyle ?? "space",
@@ -103,13 +106,42 @@ export function processKeystroke(
     return { newCtx: ctx, actions: [] };
   }
 
+  // --- Macro: stop recording with q in normal mode ---
+  if (ctx.macroRecording && key === "q" && ctx.mode === "normal" && ctx.phase === "idle") {
+    return stopMacroRecording(ctx);
+  }
+
+  // --- Macro: start recording with q{a-z} ---
+  if (key === "q" && ctx.mode === "normal" && ctx.phase === "idle" && !ctx.macroRecording) {
+    return {
+      newCtx: { ...ctx, phase: "macro-register-pending" },
+      actions: [],
+    };
+  }
+  if (ctx.phase === "macro-register-pending") {
+    return startMacroRecording(key, ctx);
+  }
+
+  // --- Macro: execute with @{a-z} or @@ ---
+  if (key === "@" && ctx.mode === "normal" && ctx.phase === "idle" && !ctx.macroRecording) {
+    return {
+      newCtx: { ...ctx, phase: "macro-execute-pending" },
+      actions: [],
+    };
+  }
+  if (ctx.phase === "macro-execute-pending") {
+    return executeMacro(key, ctx, buffer, readOnly);
+  }
+
   // --- Dot repeat: replay the last change ---
   if (key === "." && ctx.mode === "normal" && ctx.phase === "idle" && ctx.lastChange.length > 0) {
-    return replayLastChange(ctx, buffer, readOnly);
+    const result = replayLastChange(ctx, buffer, readOnly);
+    return maybeCaptureKey(key, ctx, result);
   }
 
   const result = processKeystrokeInner(key, ctx, buffer, ctrlKey, readOnly);
-  return trackChange(key, ctx, result);
+  const tracked = trackChange(key, ctx, result);
+  return maybeCaptureKey(key, ctx, tracked);
 }
 
 /**
@@ -301,6 +333,131 @@ function replayLastChange(
   // Preserve lastChange (don't overwrite with the replay)
   current.lastChange = ctx.lastChange;
   current.pendingChange = [];
+
+  return {
+    newCtx: current,
+    actions: allActions,
+  };
+}
+
+// =====================
+// Macro recording & playback
+// =====================
+
+/**
+ * Capture the key into the macro recording buffer if recording.
+ */
+function maybeCaptureKey(
+  key: string,
+  prevCtx: VimContext,
+  result: KeystrokeResult,
+): KeystrokeResult {
+  if (!prevCtx.macroRecording) return result;
+
+  // Don't record the q that starts recording (it's already handled before this)
+  // Keys during recording are captured into macros[register]
+  const reg = prevCtx.macroRecording;
+  const existing = result.newCtx.macros[reg] ?? [];
+  const recordingStatus = `recording @${reg}`;
+  // Preserve "recording @x" in status line unless there's a more important message
+  const statusMessage = result.newCtx.statusMessage
+    && result.newCtx.statusMessage !== ""
+    && result.newCtx.statusMessage !== recordingStatus
+    ? result.newCtx.statusMessage
+    : recordingStatus;
+
+  return {
+    ...result,
+    newCtx: {
+      ...result.newCtx,
+      macros: {
+        ...result.newCtx.macros,
+        [reg]: [...existing, key],
+      },
+      macroRecording: reg,
+      statusMessage,
+    },
+  };
+}
+
+/**
+ * Start recording a macro into the given register.
+ */
+function startMacroRecording(
+  key: string,
+  ctx: VimContext,
+): KeystrokeResult {
+  if (/^[a-z]$/.test(key)) {
+    return {
+      newCtx: {
+        ...ctx,
+        phase: "idle",
+        macroRecording: key,
+        macros: { ...ctx.macros, [key]: [] },
+        statusMessage: `recording @${key}`,
+      },
+      actions: [],
+    };
+  }
+  // Invalid register -> cancel
+  return {
+    newCtx: { ...ctx, phase: "idle" },
+    actions: [],
+  };
+}
+
+/**
+ * Stop recording the current macro.
+ */
+function stopMacroRecording(ctx: VimContext): KeystrokeResult {
+  return {
+    newCtx: {
+      ...ctx,
+      macroRecording: null,
+      statusMessage: "",
+    },
+    actions: [],
+  };
+}
+
+/**
+ * Execute a macro from a register, or @@ to repeat the last macro.
+ */
+function executeMacro(
+  key: string,
+  ctx: VimContext,
+  buffer: TextBuffer,
+  readOnly: boolean,
+): KeystrokeResult {
+  let reg: string | null = null;
+
+  if (key === "@" && ctx.lastMacro) {
+    reg = ctx.lastMacro;
+  } else if (/^[a-z]$/.test(key)) {
+    reg = key;
+  }
+
+  if (!reg || !ctx.macros[reg] || ctx.macros[reg].length === 0) {
+    return {
+      newCtx: { ...ctx, phase: "idle" },
+      actions: [],
+    };
+  }
+
+  const keys = ctx.macros[reg];
+  let current: VimContext = { ...ctx, phase: "idle", lastMacro: reg };
+  const allActions: import("../types").VimAction[] = [];
+
+  for (const k of keys) {
+    const inner = processKeystrokeInner(k, current, buffer, false, readOnly);
+    // Apply change tracking
+    const tracked = trackChange(k, current, inner);
+    current = tracked.newCtx;
+    allActions.push(...tracked.actions);
+  }
+
+  // Preserve macro state
+  current.lastMacro = reg;
 
   return {
     newCtx: current,
