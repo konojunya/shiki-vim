@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createHighlighter, type Highlighter } from "shiki";
-import ShikiVim from "react.vim";
+import Vim from "react.vim";
 import "react.vim/styles.css";
 
 // ---------------------------------------------------------------------------
@@ -185,10 +185,10 @@ const quickStartCode = `// Install
 npm i react.vim shiki
 
 // Use
-import ShikiVim from 'react.vim'
+import Vim from 'react.vim'
 import 'react.vim/styles.css'
 
-<ShikiVim
+<Vim
   content={code}
   highlighter={highlighter}
   lang="tsx"
@@ -421,7 +421,7 @@ function App() {
         <div style={{ position: "relative" }}>
         <div style={editorWrap}>
           {highlighter && (
-            <ShikiVim
+            <Vim
               key={lang}
               content={sampleCode[lang] ?? sampleCode.tsx}
               highlighter={highlighter}
