@@ -292,9 +292,7 @@ function App() {
     <div style={page}>
       {/* ---- Nav ---- */}
       <nav style={nav}>
-        <span style={logo}>
-          <span style={{ color: C.purple }}>:</span>shiki-vim
-        </span>
+        <div />
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
           <NavLink href="https://www.npmjs.com/package/shiki-vim">npm</NavLink>
           <a
@@ -310,7 +308,13 @@ function App() {
 
       {/* ---- Hero ---- */}
       <section style={hero}>
-        <Pill>v{__SHIKI_VIM_VERSION__} &mdash; MIT License</Pill>
+        <img
+          src="/icon.svg"
+          alt="shiki-vim mascot"
+          width={200}
+          height={200}
+          style={{ marginBottom: 32, filter: "drop-shadow(0 8px 32px rgba(167,139,250,0.35))", animation: "float 3s ease-in-out infinite" }}
+        />
 
         <h1 style={heroTitle}>
           <VimTyper />
@@ -322,11 +326,12 @@ function App() {
           Shiki highlighting, and zero configuration.
         </p>
 
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 28 }}>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", alignItems: "center", marginTop: 28 }}>
           <a href="#playground" style={ctaBtn}>
             Try it live
           </a>
           <code style={installBadge}>npm i shiki-vim</code>
+          <Pill>v{__SHIKI_VIM_VERSION__}</Pill>
         </div>
       </section>
 
@@ -577,6 +582,13 @@ function App() {
 
       {/* ---- Footer ---- */}
       <footer style={footer}>
+        <img
+          src="/icon.svg"
+          alt=""
+          width={32}
+          height={32}
+          style={{ verticalAlign: "middle", marginRight: 8, opacity: 0.6 }}
+        />
         <span>Built by </span>
         <a href="https://github.com/konojunya" target="_blank" rel="noreferrer" style={footerLink}>
           @konojunya
@@ -795,6 +807,7 @@ const page: React.CSSProperties = {
   minHeight: "100vh",
   color: C.fg,
   fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+  background: "transparent",
 };
 
 const center: React.CSSProperties = {
@@ -832,9 +845,9 @@ const hero: React.CSSProperties = {
 };
 
 const heroPill: React.CSSProperties = {
-  display: "inline-block", padding: "4px 14px", borderRadius: 20,
+  display: "inline-flex", alignItems: "center", padding: "7px 14px", borderRadius: 20,
   background: C.surface, border: `1px solid ${C.border}`,
-  fontSize: 13, fontWeight: 600, color: C.cyan, marginBottom: 20,
+  fontSize: 13, fontWeight: 600, color: C.purple,
 };
 
 const heroTitle: React.CSSProperties = {
@@ -944,7 +957,7 @@ const quickStartWrap: React.CSSProperties = {
 
 const footer: React.CSSProperties = {
   textAlign: "center", padding: "32px 24px",
-  borderTop: `1px solid ${C.border}`, color: C.muted, fontSize: 13,
+  color: C.muted, fontSize: 13,
 };
 
 const subTitle: React.CSSProperties = {
@@ -973,7 +986,7 @@ const td: React.CSSProperties = {
 };
 
 const propName: React.CSSProperties = {
-  color: C.cyan, fontFamily: "'SF Mono', 'Fira Code', monospace",
+  color: C.purple, fontFamily: "'SF Mono', 'Fira Code', monospace",
   fontSize: 13, fontWeight: 600,
 };
 
