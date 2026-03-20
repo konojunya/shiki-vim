@@ -62,6 +62,13 @@ export interface VimContext {
   statusMessage: string;
   indentStyle: "space" | "tab";
   indentWidth: number;
+  /** Pending visual-block insert info (for I/A in visual-block mode) */
+  blockInsert: {
+    startLine: number;
+    endLine: number;
+    col: number;
+    cursorAtInsertStart: CursorPosition;
+  } | null;
   /** First visible line in the viewport (0-based) */
   viewportTopLine: number;
   /** Number of visible lines in the viewport */

@@ -54,6 +54,7 @@ export function createInitialContext(
     charCommand: null,
     lastCharSearch: null,
     textObjectModifier: null,
+    blockInsert: null,
     statusMessage: "",
     indentStyle: opts?.indentStyle ?? "space",
     indentWidth: opts?.indentWidth ?? 2,

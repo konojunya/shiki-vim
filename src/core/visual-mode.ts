@@ -120,6 +120,12 @@ export function processVisualMode(
     };
   }
 
+  // --- Visual-block I/A: insert at block column ---
+  if (ctx.mode === "visual-block" && (key === "I" || key === "A") && ctx.visualAnchor) {
+    if (readOnly) return { newCtx: ctx, actions: [] };
+    return enterBlockInsert(key, ctx);
+  }
+
   // --- Operator execution ---
   if (key === "d" || key === "x" || key === "y" || key === "c") {
     // readOnly: block delete/change (y is allowed)
@@ -275,6 +281,48 @@ function executeVisualOperator(
       ...result.actions,
       { type: "cursor-move", position: result.newCursor },
       { type: "mode-change", mode: result.newMode },
+    ],
+  };
+}
+
+/**
+ * Enter insert mode from visual-block with I or A.
+ * I inserts at the left edge of the block, A appends at the right edge.
+ * The blockInsert info is stored so that on Escape, the typed text
+ * is replicated to all lines in the block.
+ */
+function enterBlockInsert(
+  key: string,
+  ctx: VimContext,
+): KeystrokeResult {
+  const anchor = ctx.visualAnchor!;
+  const startLine = Math.min(anchor.line, ctx.cursor.line);
+  const endLine = Math.max(anchor.line, ctx.cursor.line);
+  const leftCol = Math.min(anchor.col, ctx.cursor.col);
+  const rightCol = Math.max(anchor.col, ctx.cursor.col);
+
+  const col = key === "I" ? leftCol : rightCol + 1;
+  const newCursor = { line: startLine, col };
+
+  return {
+    newCtx: {
+      ...ctx,
+      mode: "insert",
+      phase: "idle",
+      count: 0,
+      visualAnchor: null,
+      cursor: newCursor,
+      statusMessage: "-- INSERT --",
+      blockInsert: {
+        startLine,
+        endLine,
+        col,
+        cursorAtInsertStart: { ...newCursor },
+      },
+    },
+    actions: [
+      { type: "cursor-move", position: newCursor },
+      { type: "mode-change", mode: "insert" },
     ],
   };
 }

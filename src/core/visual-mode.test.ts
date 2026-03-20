@@ -464,5 +464,81 @@ describe("Visual mode", () => {
       const result = processKeystroke("V", ctx, buffer);
       expect(result.newCtx.mode).toBe("visual-line");
     });
+
+    it("I inserts text at block left column on all lines", () => {
+      const buffer = new TextBuffer("abcde\nfghij\nklmno");
+      // Block select cols 2-3 on lines 0-2
+      const ctx = createBlockContext(
+        { line: 2, col: 3 },
+        { line: 0, col: 2 },
+      );
+      // I enters insert mode at left col (2) on first line
+      const { ctx: insertCtx } = pressKeys(["Shift", "I"], ctx, buffer);
+      expect(insertCtx.mode).toBe("insert");
+      expect(insertCtx.cursor).toEqual({ line: 0, col: 2 });
+      expect(insertCtx.blockInsert).not.toBeNull();
+
+      // Type "XX"
+      const { ctx: afterType } = pressKeys(["X", "X"], insertCtx, buffer);
+      expect(buffer.getLine(0)).toBe("abXXcde");
+
+      // Escape -> text is replicated to lines 1 and 2
+      const { ctx: afterEsc } = pressKeys(["Escape"], afterType, buffer);
+      expect(afterEsc.mode).toBe("normal");
+      expect(buffer.getLine(0)).toBe("abXXcde");
+      expect(buffer.getLine(1)).toBe("fgXXhij");
+      expect(buffer.getLine(2)).toBe("klXXmno");
+      expect(afterEsc.blockInsert).toBeNull();
+    });
+
+    it("A appends text at block right column on all lines", () => {
+      const buffer = new TextBuffer("abcde\nfghij\nklmno");
+      // Block select cols 1-2 on lines 0-1
+      const ctx = createBlockContext(
+        { line: 1, col: 2 },
+        { line: 0, col: 1 },
+      );
+      // A enters insert mode at right col + 1 (3) on first line
+      const { ctx: insertCtx } = pressKeys(["Shift", "A"], ctx, buffer);
+      expect(insertCtx.mode).toBe("insert");
+      expect(insertCtx.cursor).toEqual({ line: 0, col: 3 });
+
+      // Type "Z"
+      const { ctx: afterType } = pressKeys(["Z"], insertCtx, buffer);
+      expect(buffer.getLine(0)).toBe("abcZde");
+
+      // Escape
+      const { ctx: afterEsc } = pressKeys(["Escape"], afterType, buffer);
+      expect(buffer.getLine(0)).toBe("abcZde");
+      expect(buffer.getLine(1)).toBe("fghZij");
+      expect(buffer.getLine(2)).toBe("klmno"); // not in block range
+    });
+
+    it("I with no text typed does not modify other lines", () => {
+      const buffer = new TextBuffer("abc\ndef\nghi");
+      const ctx = createBlockContext(
+        { line: 2, col: 1 },
+        { line: 0, col: 0 },
+      );
+      const { ctx: insertCtx } = pressKeys(["Shift", "I"], ctx, buffer);
+      // Immediately Escape without typing
+      pressKeys(["Escape"], insertCtx, buffer);
+      expect(buffer.getContent()).toBe("abc\ndef\nghi");
+    });
+
+    it("I pads short lines with spaces", () => {
+      const buffer = new TextBuffer("abcdef\nab\nabcdef");
+      // Block select col 4 on lines 0-2
+      const ctx = createBlockContext(
+        { line: 2, col: 4 },
+        { line: 0, col: 4 },
+      );
+      const { ctx: insertCtx } = pressKeys(["Shift", "I"], ctx, buffer);
+      const { ctx: afterType } = pressKeys(["X"], insertCtx, buffer);
+      pressKeys(["Escape"], afterType, buffer);
+      expect(buffer.getLine(0)).toBe("abcdXef");
+      expect(buffer.getLine(1)).toBe("ab  X"); // padded with spaces, nothing after
+      expect(buffer.getLine(2)).toBe("abcdXef");
+    });
   });
 });

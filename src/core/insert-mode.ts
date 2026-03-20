@@ -27,7 +27,7 @@ export function processInsertMode(
 ): KeystrokeResult {
   // --- Escape -> return to normal mode ---
   if (key === "Escape") {
-    return handleEscape(ctx);
+    return handleEscape(ctx, buffer);
   }
 
   // --- Ctrl key combinations ---
@@ -69,10 +69,44 @@ export function processInsertMode(
 /**
  * Escape: Transition from insert mode to normal mode.
  * Move the cursor one position to the left (Vim behavior).
+ *
+ * If blockInsert is set (from visual-block I/A), replicate the typed
+ * text to all other lines in the block before returning to normal.
  */
-function handleEscape(ctx: VimContext): KeystrokeResult {
+function handleEscape(ctx: VimContext, buffer: TextBuffer): KeystrokeResult {
+  const actions: import("../types").VimAction[] = [];
+
+  // Handle visual-block insert replication
+  if (ctx.blockInsert) {
+    const { startLine, endLine, col, cursorAtInsertStart } = ctx.blockInsert;
+
+    // Figure out what text was typed by reading the first line
+    // from the original insert column to the current cursor position
+    const firstLine = buffer.getLine(cursorAtInsertStart.line);
+    const insertedText = firstLine.slice(col, ctx.cursor.col);
+
+    if (insertedText.length > 0) {
+      // Insert the same text at the same column on the remaining lines
+      for (let l = startLine; l <= endLine; l++) {
+        if (l === cursorAtInsertStart.line) continue;
+        const line = buffer.getLine(l);
+        // Pad with spaces if the line is shorter than the insert column
+        const padded = line.length < col
+          ? line + " ".repeat(col - line.length)
+          : line;
+        buffer.setLine(l, padded.slice(0, col) + insertedText + padded.slice(col));
+      }
+      actions.push({ type: "content-change", content: buffer.getContent() });
+    }
+  }
+
   const col = Math.max(0, ctx.cursor.col - 1);
   const newCursor = { line: ctx.cursor.line, col };
+
+  actions.push(
+    { type: "cursor-move", position: newCursor },
+    { type: "mode-change", mode: "normal" },
+  );
 
   return {
     newCtx: {
@@ -82,12 +116,10 @@ function handleEscape(ctx: VimContext): KeystrokeResult {
       count: 0,
       operator: null,
       cursor: newCursor,
+      blockInsert: null,
       statusMessage: "",
     },
-    actions: [
-      { type: "cursor-move", position: newCursor },
-      { type: "mode-change", mode: "normal" },
-    ],
+    actions,
   };
 }
 
