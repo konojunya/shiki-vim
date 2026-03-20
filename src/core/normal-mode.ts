@@ -33,7 +33,7 @@ import { handleCtrlKey } from "./ctrl-keys";
 import { resolveMotion } from "./motion-resolver";
 import { executeOperatorOnRange, executeLineOperator } from "./operators";
 import { handleCharPending } from "./char-pending";
-import { motionGG } from "./motions";
+import { motionGG, motionDollar } from "./motions";
 import { searchInBuffer } from "./search";
 
 /**
@@ -68,7 +68,7 @@ export function processNormalMode(
     const mutatingKeys = new Set([
       "i", "a", "o", "I", "A", "O",  // insert entry
       "x", "p", "P",                   // edit commands
-      "d", "c",                         // mutating operators (y is allowed)
+      "d", "c", "D", "C",              // mutating operators (y is allowed)
       "J",                              // join lines
       "u",                              // undo
       "r",                              // replace char
@@ -465,9 +465,64 @@ function tryEditCommand(
       return handlePasteAfter(ctx, buffer, count);
     case "P":
       return handlePasteBefore(ctx, buffer, count);
+    case "D":
+      return handleDeleteToEndOfLine(ctx, buffer);
+    case "C":
+      return handleChangeToEndOfLine(ctx, buffer);
     default:
       return null;
   }
+}
+
+/**
+ * D: Delete from cursor to end of line (equivalent to d$)
+ */
+function handleDeleteToEndOfLine(
+  ctx: VimContext,
+  buffer: TextBuffer,
+): KeystrokeResult {
+  const motion = motionDollar(ctx.cursor, buffer, 1);
+  buffer.saveUndoPoint(ctx.cursor);
+  const result = executeOperatorOnRange("d", motion.range, buffer, ctx.cursor);
+
+  return {
+    newCtx: {
+      ...resetContext(ctx),
+      cursor: result.newCursor,
+      register: result.yankedText,
+    },
+    actions: [
+      ...result.actions,
+      { type: "cursor-move", position: result.newCursor },
+    ],
+  };
+}
+
+/**
+ * C: Change from cursor to end of line (equivalent to c$)
+ */
+function handleChangeToEndOfLine(
+  ctx: VimContext,
+  buffer: TextBuffer,
+): KeystrokeResult {
+  const motion = motionDollar(ctx.cursor, buffer, 1);
+  buffer.saveUndoPoint(ctx.cursor);
+  const result = executeOperatorOnRange("c", motion.range, buffer, ctx.cursor);
+
+  return {
+    newCtx: {
+      ...resetContext(ctx),
+      mode: "insert",
+      cursor: result.newCursor,
+      register: result.yankedText,
+      statusMessage: "-- INSERT --",
+    },
+    actions: [
+      ...result.actions,
+      { type: "cursor-move", position: result.newCursor },
+      { type: "mode-change", mode: "insert" },
+    ],
+  };
 }
 
 /**

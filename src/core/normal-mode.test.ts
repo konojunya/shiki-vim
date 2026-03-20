@@ -331,6 +331,66 @@ describe("Normal mode", () => {
   });
 
   // ---------------------------------------------------
+  // D (delete to end of line)
+  // ---------------------------------------------------
+  describe("D command (delete to end of line)", () => {
+    it("deletes from cursor to end of line with D", () => {
+      const buffer = new TextBuffer("hello world");
+      const ctx = createTestContext({ line: 0, col: 5 });
+      const { ctx: result } = pressKeys(["D"], ctx, buffer);
+      expect(buffer.getContent()).toBe("hello");
+      expect(result.register).toBe(" world");
+      expect(result.cursor.col).toBe(4);
+    });
+
+    it("deletes entire line content with D at column 0", () => {
+      const buffer = new TextBuffer("hello world");
+      const ctx = createTestContext({ line: 0, col: 0 });
+      const { ctx: result } = pressKeys(["D"], ctx, buffer);
+      expect(buffer.getContent()).toBe("");
+      expect(result.register).toBe("hello world");
+    });
+
+    it("deletes last character with D at end of line", () => {
+      const buffer = new TextBuffer("abc");
+      const ctx = createTestContext({ line: 0, col: 2 });
+      const { ctx: result } = pressKeys(["D"], ctx, buffer);
+      expect(buffer.getContent()).toBe("ab");
+      expect(result.register).toBe("c");
+    });
+
+    it("does not affect other lines with D", () => {
+      const buffer = new TextBuffer("hello world\nsecond line");
+      const ctx = createTestContext({ line: 0, col: 5 });
+      pressKeys(["D"], ctx, buffer);
+      expect(buffer.getContent()).toBe("hello\nsecond line");
+    });
+  });
+
+  // ---------------------------------------------------
+  // C (change to end of line)
+  // ---------------------------------------------------
+  describe("C command (change to end of line)", () => {
+    it("deletes from cursor to end of line and enters insert mode with C", () => {
+      const buffer = new TextBuffer("hello world");
+      const ctx = createTestContext({ line: 0, col: 5 });
+      const { ctx: result } = pressKeys(["C"], ctx, buffer);
+      expect(buffer.getContent()).toBe("hello");
+      expect(result.mode).toBe("insert");
+      expect(result.register).toBe(" world");
+      expect(result.cursor.col).toBe(5);
+    });
+
+    it("changes entire line content with C at column 0", () => {
+      const buffer = new TextBuffer("hello world");
+      const ctx = createTestContext({ line: 0, col: 0 });
+      const { ctx: result } = pressKeys(["C"], ctx, buffer);
+      expect(buffer.getContent()).toBe("");
+      expect(result.mode).toBe("insert");
+    });
+  });
+
+  // ---------------------------------------------------
   // u (undo)
   // ---------------------------------------------------
   describe("u command (undo)", () => {
