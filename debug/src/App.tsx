@@ -500,7 +500,7 @@ export default function App() {
             <select value={indentStyle} onChange={(e) => {
               const style = e.target.value as "tab" | "space";
               setIndentStyle(style);
-              if (style === "tab") setIndentWidth(4);
+              setIndentWidth(style === "tab" ? 4 : 2);
             }} style={selectStyle}>
               <option value="tab">Tab</option>
               <option value="space">Space</option>
