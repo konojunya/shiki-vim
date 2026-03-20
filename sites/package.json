@@ -1,5 +1,5 @@
 {
-  "name": "shiki-vim-sites",
+  "name": "react.vim-sites",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,7 +12,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "shiki": "^3.0.0",
-    "shiki-vim": "0.2.0"
+    "react.vim": "0.0.1"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

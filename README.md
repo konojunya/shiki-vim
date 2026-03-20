@@ -1,28 +1,28 @@
-<img src="sites/public/ogp.png" alt="shiki-vim" width="100%" />
+<img src="sites/public/ogp.png" alt="react.vim" width="100%" />
 
-<h1 align="center">shiki-vim</h1>
+<h1 align="center">react.vim</h1>
 
 <p align="center">
   Vim-powered code editor component for React with Shiki syntax highlighting.
 </p>
 
 <p align="center">
-  <a href="https://shiki-vim.0xjj.dev">Documentation</a> ·
-  <a href="https://shiki-vim.0xjj.dev/#playground">Playground</a> ·
-  <a href="https://www.npmjs.com/package/shiki-vim">npm</a>
+  <a href="https://react.vim.0xjj.dev">Documentation</a> ·
+  <a href="https://react.vim.0xjj.dev/#playground">Playground</a> ·
+  <a href="https://www.npmjs.com/package/react.vim">npm</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/konojunya/shiki-vim/actions/workflows/ci.yaml"><img src="https://github.com/konojunya/shiki-vim/actions/workflows/ci.yaml/badge.svg" alt="CI" /></a>
-  <a href="https://www.npmjs.com/package/shiki-vim"><img src="https://img.shields.io/npm/v/shiki-vim" alt="npm version" /></a>
-  <a href="https://www.npmjs.com/package/shiki-vim"><img src="https://img.shields.io/npm/dm/shiki-vim" alt="npm downloads" /></a>
-  <a href="https://bundlephobia.com/package/shiki-vim"><img src="https://img.shields.io/bundlephobia/minzip/shiki-vim" alt="bundle size" /></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/npm/l/shiki-vim" alt="license" /></a>
+  <a href="https://github.com/konojunya/react.vim/actions/workflows/ci.yaml"><img src="https://github.com/konojunya/react.vim/actions/workflows/ci.yaml/badge.svg" alt="CI" /></a>
+  <a href="https://www.npmjs.com/package/react.vim"><img src="https://img.shields.io/npm/v/react.vim" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/react.vim"><img src="https://img.shields.io/npm/dm/react.vim" alt="npm downloads" /></a>
+  <a href="https://bundlephobia.com/package/react.vim"><img src="https://img.shields.io/bundlephobia/minzip/react.vim" alt="bundle size" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/npm/l/react.vim" alt="license" /></a>
 </p>
 
 ---
 
-Drop-in `<ShikiVim />` component with real Vim modes, [Shiki](https://shiki.style/) highlighting, and zero configuration.
+Drop-in `<Vim />` component with real Vim modes, [Shiki](https://shiki.style/) highlighting, and zero configuration.
 
 ## Features
 
@@ -38,7 +38,7 @@ Drop-in `<ShikiVim />` component with real Vim modes, [Shiki](https://shiki.styl
 ## Install
 
 ```bash
-npm install shiki-vim shiki react react-dom
+npm install react.vim shiki react react-dom
 ```
 
 `shiki`, `react`, and `react-dom` are peer dependencies.
@@ -46,8 +46,8 @@ npm install shiki-vim shiki react react-dom
 ## Quick Start
 
 ```tsx
-import ShikiVim from "shiki-vim";
-import "shiki-vim/styles.css";
+import Vim from "react.vim";
+import "react.vim/styles.css";
 import { createHighlighter } from "shiki";
 
 const highlighter = await createHighlighter({
@@ -57,7 +57,7 @@ const highlighter = await createHighlighter({
 
 function App() {
   return (
-    <ShikiVim
+    <Vim
       content={`function greet(name: string) {\n  return "Hello, " + name;\n}`}
       highlighter={highlighter}
       lang="typescript"
@@ -73,7 +73,7 @@ function App() {
 }
 ```
 
-> [Try it live in the playground](https://shiki-vim.0xjj.dev/#playground)
+> [Try it live in the playground](https://react.vim.0xjj.dev/#playground)
 
 ## Props
 
@@ -260,7 +260,7 @@ Override CSS variables for visual customization. Behavioral settings like indent
 For advanced use cases, the internal hooks are exported:
 
 ```tsx
-import { useVimEngine, useShikiTokens } from "shiki-vim";
+import { useVimEngine, useShikiTokens } from "react.vim";
 
 const engine = useVimEngine({
   content: "hello world",
@@ -285,7 +285,7 @@ bun run fmt         # oxfmt
 
 ### Debug App
 
-A local debug app lives in `debug/`. It references the shiki-vim source directly via Vite aliases — no build step needed for live feedback.
+A local debug app lives in `debug/`. It references the react.vim source directly via Vite aliases — no build step needed for live feedback.
 
 ```bash
 cd debug

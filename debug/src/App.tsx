@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, type CSSProperties } from "react";
 import { createHighlighter, bundledLanguages, bundledThemes, type Highlighter } from "shiki";
-import ShikiVim, { type VimAction } from "shiki-vim";
-import "shiki-vim/styles.css";
+import ShikiVim, { type VimAction } from "react.vim";
+import "react.vim/styles.css";
 
 const themes = Object.keys(bundledThemes);
 const langs = Object.keys(bundledLanguages);
@@ -286,7 +286,7 @@ func main() {
 }
 `;
 
-// CSS variables exposed by shiki-vim
+// CSS variables exposed by react.vim
 type VarType = "text" | "color";
 
 interface ColorState {
@@ -354,7 +354,7 @@ export default function App() {
 
   const buildReport = useCallback(() => {
     const lines: string[] = [];
-    lines.push("## shiki-vim debug report");
+    lines.push("## react.vim debug report");
     lines.push("");
     lines.push(`- theme: ${theme}`);
     lines.push(`- lang: ${lang}`);
@@ -471,7 +471,7 @@ export default function App() {
   return (
     <div>
       <h1 style={{ marginBottom: "1rem", fontSize: "1.5rem" }}>
-        shiki-vim debug
+        react.vim debug
       </h1>
 
       {/* Controls */}

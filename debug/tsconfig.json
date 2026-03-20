@@ -9,8 +9,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "shiki-vim": ["../src/index.ts"],
-      "shiki-vim/styles.css": ["../src/styles.css"]
+      "react.vim": ["../src/index.ts"],
+      "react.vim/styles.css": ["../src/styles.css"]
     }
   },
   "include": ["src"]

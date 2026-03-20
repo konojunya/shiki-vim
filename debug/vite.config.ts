@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "shiki-vim/styles.css": path.resolve(__dirname, "../src/styles.css"),
-      "shiki-vim": path.resolve(__dirname, "../src/index.ts"),
+      "react.vim/styles.css": path.resolve(__dirname, "../src/styles.css"),
+      "react.vim": path.resolve(__dirname, "../src/index.ts"),
     },
   },
 });

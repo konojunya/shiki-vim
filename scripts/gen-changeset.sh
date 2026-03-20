@@ -49,7 +49,7 @@ BODY=""
 RANDOM_NAME=$(date +%s | shasum | head -c 16)
 CHANGESET_FILE=".changeset/${RANDOM_NAME}.md"
 
-printf -- '---\n"shiki-vim": %s\n---\n%b' "$BUMP" "$BODY" > "$CHANGESET_FILE"
+printf -- '---\n"react.vim": %s\n---\n%b' "$BUMP" "$BODY" > "$CHANGESET_FILE"
 
 echo "Created ${CHANGESET_FILE} (${BUMP})"
 echo ""

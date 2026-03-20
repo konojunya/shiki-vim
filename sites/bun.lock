@@ -6,8 +6,8 @@
       "dependencies": {
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
+        "react.vim": "0.0.1",
         "shiki": "^3.0.0",
-        "shiki-vim": "0.2.0",
       },
       "devDependencies": {
         "@types/react": "^19.0.0",
@@ -297,6 +297,8 @@
 
     "react-refresh": ["react-refresh@0.17.0", "", {}, "sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ=="],
 
+    "react.vim": ["react.vim@0.0.1", "", { "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0", "shiki": ">=1.0.0" } }, "sha512-3WAMVQQSVdhL1YN6ubeA/2ugFq54lM2PuI7PDJPDCaw80xkIjcopvzQ7jyJ6Tc6gZFLtWW1U+VGeJNnt9MSPmg=="],
+
     "regex": ["regex@6.1.0", "", { "dependencies": { "regex-utilities": "^2.3.0" } }, "sha512-6VwtthbV4o/7+OaAF9I5L5V3llLEsoPyq9P1JVXkedTP33c7MfCG0/5NOPcSJn0TzXcG9YUrR0gQSWioew3LDg=="],
 
     "regex-recursion": ["regex-recursion@6.0.2", "", { "dependencies": { "regex-utilities": "^2.3.0" } }, "sha512-0YCaSCq2VRIebiaUviZNs0cBz1kg5kVS2UKUfNIx8YVs1cN3AV7NTctO5FOKBA+UT2BPJIWZauYHPqJODG50cg=="],
@@ -310,8 +312,6 @@
     "semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
     "shiki": ["shiki@3.23.0", "", { "dependencies": { "@shikijs/core": "3.23.0", "@shikijs/engine-javascript": "3.23.0", "@shikijs/engine-oniguruma": "3.23.0", "@shikijs/langs": "3.23.0", "@shikijs/themes": "3.23.0", "@shikijs/types": "3.23.0", "@shikijs/vscode-textmate": "^10.0.2", "@types/hast": "^3.0.4" } }, "sha512-55Dj73uq9ZXL5zyeRPzHQsK7Nbyt6Y10k5s7OjuFZGMhpp4r/rsLBH0o/0fstIzX1Lep9VxefWljK/SKCzygIA=="],
-
-    "shiki-vim": ["shiki-vim@0.2.0", "", { "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0", "shiki": ">=1.0.0" } }, "sha512-WNwrCGK8srPlq41iU6D5gf6fhhLW54Wwi3l1AyhK0NImtme6u+iobFCJj0my4WryhAE0IKgx8G9lu+Ilf5pgUg=="],
 
     "source-map-js": ["source-map-js@1.2.1", "", {}, "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="],
 

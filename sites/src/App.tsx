@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createHighlighter, type Highlighter } from "shiki";
-import ShikiVim from "shiki-vim";
-import "shiki-vim/styles.css";
+import ShikiVim from "react.vim";
+import "react.vim/styles.css";
 
 // ---------------------------------------------------------------------------
 // Data
@@ -146,7 +146,7 @@ func main() {
 <body>
   <div class="card">
     <h1>Hello World</h1>
-    <p>Welcome to shiki-vim!</p>
+    <p>Welcome to react.vim!</p>
   </div>
 </body>
 </html>`,
@@ -168,7 +168,7 @@ body {
   backdrop-filter: blur(12px);
 }`,
   json: `{
-  "name": "shiki-vim",
+  "name": "react.vim",
   "version": "0.0.1",
   "description": "A vim-like code editor powered by Shiki",
   "keywords": ["vim", "editor", "shiki", "react"],
@@ -176,17 +176,17 @@ body {
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/konojunya/shiki-vim"
+    "url": "https://github.com/konojunya/react.vim"
   }
 }`,
 };
 
 const quickStartCode = `// Install
-npm i shiki-vim shiki
+npm i react.vim shiki
 
 // Use
-import ShikiVim from 'shiki-vim'
-import 'shiki-vim/styles.css'
+import ShikiVim from 'react.vim'
+import 'react.vim/styles.css'
 
 <ShikiVim
   content={code}
@@ -294,9 +294,9 @@ function App() {
       <nav style={nav}>
         <div />
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-          <NavLink href="https://www.npmjs.com/package/shiki-vim">npm</NavLink>
+          <NavLink href="https://www.npmjs.com/package/react.vim">npm</NavLink>
           <a
-            href="https://github.com/konojunya/shiki-vim"
+            href="https://github.com/konojunya/react.vim"
             target="_blank"
             rel="noreferrer"
             style={ghBtn}
@@ -310,7 +310,7 @@ function App() {
       <section className="hero-section" style={hero}>
         <img
           src="/icon.svg"
-          alt="shiki-vim mascot"
+          alt="react.vim mascot"
           style={{ width: 140, height: "auto", marginBottom: 32, filter: "drop-shadow(0 8px 32px rgba(167,139,250,0.35))", animation: "float 3s ease-in-out infinite" }}
         />
 
@@ -328,7 +328,7 @@ function App() {
           <a href="#playground" style={{ ...ctaBtn, textAlign: "center" }}>
             Try it live
           </a>
-          <code style={installBadge}>npm i shiki-vim</code>
+          <code style={installBadge}>npm i react.vim</code>
           <Pill>v{__SHIKI_VIM_VERSION__}</Pill>
         </div>
       </section>
@@ -592,11 +592,11 @@ function App() {
           @konojunya
         </a>
         <Dot />
-        <a href="https://github.com/konojunya/shiki-vim" target="_blank" rel="noreferrer" style={footerLinkMuted}>
+        <a href="https://github.com/konojunya/react.vim" target="_blank" rel="noreferrer" style={footerLinkMuted}>
           GitHub
         </a>
         <Dot />
-        <a href="https://www.npmjs.com/package/shiki-vim" target="_blank" rel="noreferrer" style={footerLinkMuted}>
+        <a href="https://www.npmjs.com/package/react.vim" target="_blank" rel="noreferrer" style={footerLinkMuted}>
           npm
         </a>
       </footer>

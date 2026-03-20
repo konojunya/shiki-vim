@@ -1,12 +1,12 @@
 /**
- * shiki-vim
+ * react.vim
  *
  * A vim-like lightweight code editor React component powered by Shiki.
  *
  * @example
  * ```tsx
- * import ShikiVim from 'shiki-vim'
- * import 'shiki-vim/styles.css'
+ * import ShikiVim from 'react.vim'
+ * import 'react.vim/styles.css'
  *
  * <ShikiVim
  *   content={code}

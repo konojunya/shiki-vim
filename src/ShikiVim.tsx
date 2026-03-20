@@ -6,8 +6,8 @@
  *
  * Usage:
  * ```tsx
- * import ShikiVim from 'shiki-vim'
- * import 'shiki-vim/styles.css'
+ * import ShikiVim from 'react.vim'
+ * import 'react.vim/styles.css'
  * import { createHighlighter } from 'shiki'
  *
  * const highlighter = await createHighlighter({
