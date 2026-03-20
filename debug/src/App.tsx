@@ -5,6 +5,7 @@ import "shiki-vim/styles.css";
 
 const themes = Object.keys(bundledThemes);
 const langs = Object.keys(bundledLanguages);
+const tabLanguages = new Set(["go", "makefile", "zig"]);
 
 const initialCode = `package main
 
@@ -542,6 +543,8 @@ export default function App() {
           onChange={setCode}
           onYank={(text) => navigator.clipboard.writeText(text)}
           onAction={handleAction}
+          indentStyle={tabLanguages.has(lang) ? "tab" : "space"}
+          indentWidth={tabLanguages.has(lang) ? 4 : 2}
           autoFocus
           className="debug-editor"
         />
