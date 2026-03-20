@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="sites/public/icon.svg" alt="shiki-vim" width="80" />
+  <img src="sites/public/ogp.png" alt="shiki-vim" width="100%" />
 </p>
 
 <h1 align="center">shiki-vim</h1>
