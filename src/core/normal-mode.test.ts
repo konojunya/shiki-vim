@@ -648,4 +648,192 @@ describe("ノーマルモード", () => {
       expect(result.phase).toBe("idle");
     });
   });
+
+  // ---------------------------------------------------
+  // readOnly モード
+  // ---------------------------------------------------
+  describe("readOnly モード", () => {
+    /** readOnly モードで複数キーを処理するヘルパー */
+    function pressKeysReadOnly(
+      keys: string[],
+      ctx: VimContext,
+      buffer: TextBuffer,
+    ) {
+      let current = ctx;
+      const allActions: import("../types").VimAction[] = [];
+      for (const key of keys) {
+        const result = processKeystroke(key, current, buffer, false, true);
+        current = result.newCtx;
+        allActions.push(...result.actions);
+      }
+      return { ctx: current, allActions };
+    }
+
+    it("i, a, o, I, A, O でインサートモードに入れない", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createTestContext({ line: 0, col: 0 });
+
+      for (const key of ["i", "a", "o", "I", "A", "O"]) {
+        const result = processKeystroke(key, ctx, buffer, false, true);
+        expect(result.newCtx.mode).toBe("normal");
+      }
+    });
+
+    it("d, c オペレーターがブロックされる", () => {
+      const buffer = new TextBuffer("hello world");
+      const ctx = createTestContext({ line: 0, col: 0 });
+
+      const { ctx: afterD } = pressKeysReadOnly(["d"], ctx, buffer);
+      expect(afterD.phase).toBe("idle");
+      expect(afterD.operator).toBeNull();
+      expect(buffer.getContent()).toBe("hello world");
+
+      const { ctx: afterC } = pressKeysReadOnly(["c"], ctx, buffer);
+      expect(afterC.phase).toBe("idle");
+      expect(afterC.operator).toBeNull();
+      expect(buffer.getContent()).toBe("hello world");
+    });
+
+    it("y オペレーターは許可される", () => {
+      const buffer = new TextBuffer("hello world");
+      const ctx = createTestContext({ line: 0, col: 0 });
+
+      const { ctx: result, allActions } = pressKeysReadOnly(
+        ["y", "w"],
+        ctx,
+        buffer,
+      );
+      expect(result.register).toBe("hello ");
+      expect(allActions.some((a) => a.type === "yank")).toBe(true);
+      expect(buffer.getContent()).toBe("hello world");
+    });
+
+    it("x, p, P がブロックされる", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createTestContext(
+        { line: 0, col: 0 },
+        { register: "test" },
+      );
+
+      for (const key of ["x", "p", "P"]) {
+        const result = processKeystroke(key, ctx, buffer, false, true);
+        expect(result.newCtx.mode).toBe("normal");
+        expect(buffer.getContent()).toBe("hello");
+      }
+    });
+
+    it("J (行結合) がブロックされる", () => {
+      const buffer = new TextBuffer("hello\nworld");
+      const ctx = createTestContext({ line: 0, col: 0 });
+
+      const result = processKeystroke("J", ctx, buffer, false, true);
+      expect(buffer.getContent()).toBe("hello\nworld");
+      expect(result.newCtx.mode).toBe("normal");
+    });
+
+    it("u (undo) がブロックされる", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createTestContext({ line: 0, col: 0 });
+
+      const result = processKeystroke("u", ctx, buffer, false, true);
+      expect(result.newCtx.mode).toBe("normal");
+    });
+
+    it("r (replace) がブロックされる", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createTestContext({ line: 0, col: 0 });
+
+      const result = processKeystroke("r", ctx, buffer, false, true);
+      expect(buffer.getContent()).toBe("hello");
+    });
+
+    it("Ctrl-R (redo) がブロックされる", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createTestContext({ line: 0, col: 0 });
+
+      const result = processKeystroke("r", ctx, buffer, true, true);
+      expect(result.newCtx.mode).toBe("normal");
+    });
+
+    it(": (exコマンド) がブロックされる", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createTestContext({ line: 0, col: 0 });
+
+      const result = processKeystroke(":", ctx, buffer, false, true);
+      expect(result.newCtx.mode).toBe("normal");
+    });
+
+    it("モーション (h, j, k, l, w, e, b) は許可される", () => {
+      const buffer = new TextBuffer("hello world\nsecond line");
+      const ctx = createTestContext({ line: 0, col: 0 });
+
+      // w: 次の単語へ
+      const r1 = processKeystroke("w", ctx, buffer, false, true);
+      expect(r1.newCtx.cursor.col).toBe(6);
+
+      // j: 次の行へ
+      const r2 = processKeystroke("j", ctx, buffer, false, true);
+      expect(r2.newCtx.cursor.line).toBe(1);
+    });
+
+    it("/ (検索) は許可される", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createTestContext({ line: 0, col: 0 });
+
+      const result = processKeystroke("/", ctx, buffer, false, true);
+      expect(result.newCtx.mode).toBe("command-line");
+      expect(result.newCtx.commandType).toBe("/");
+    });
+
+    it("v, V (ビジュアルモード) は許可される", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createTestContext({ line: 0, col: 0 });
+
+      const r1 = processKeystroke("v", ctx, buffer, false, true);
+      expect(r1.newCtx.mode).toBe("visual");
+
+      const r2 = processKeystroke("V", ctx, buffer, false, true);
+      expect(r2.newCtx.mode).toBe("visual-line");
+    });
+
+    it("ビジュアルモードで d, x, c がブロックされる", () => {
+      const buffer = new TextBuffer("hello world");
+      const ctx = createTestContext(
+        { line: 0, col: 0 },
+        { mode: "visual", visualAnchor: { line: 0, col: 0 } },
+      );
+
+      // カーソルを動かして選択範囲を作る
+      const { ctx: afterMotion } = pressKeysReadOnly(["w"], ctx, buffer);
+
+      for (const key of ["d", "x", "c"]) {
+        const result = processKeystroke(key, afterMotion, buffer, false, true);
+        expect(buffer.getContent()).toBe("hello world");
+      }
+    });
+
+    it("ビジュアルモードで y は許可される", () => {
+      const buffer = new TextBuffer("hello world");
+      const ctx = createTestContext(
+        { line: 0, col: 0 },
+        { mode: "visual", visualAnchor: { line: 0, col: 0 } },
+      );
+
+      const { ctx: afterMotion } = pressKeysReadOnly(["e"], ctx, buffer);
+      const result = processKeystroke("y", afterMotion, buffer, false, true);
+      expect(result.newCtx.register).toBeTruthy();
+      expect(buffer.getContent()).toBe("hello world");
+    });
+
+    it("insertモードにいる場合は強制的にnormalに戻る", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createTestContext(
+        { line: 0, col: 2 },
+        { mode: "insert", statusMessage: "-- INSERT --" },
+      );
+
+      const result = processKeystroke("a", ctx, buffer, false, true);
+      expect(result.newCtx.mode).toBe("normal");
+    });
+  });
 });

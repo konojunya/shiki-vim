@@ -37,6 +37,7 @@ export function processVisualMode(
   ctx: VimContext,
   buffer: TextBuffer,
   ctrlKey: boolean,
+  readOnly: boolean = false,
 ): KeystrokeResult {
   // --- Escape → ノーマルモードへ ---
   if (key === "Escape") {
@@ -86,6 +87,10 @@ export function processVisualMode(
 
   // --- オペレーター実行 ---
   if (key === "d" || key === "x" || key === "y" || key === "c") {
+    // readOnly: 削除・変更をブロック（y は許可）
+    if (readOnly && key !== "y") {
+      return { newCtx: ctx, actions: [] };
+    }
     return executeVisualOperator(key, ctx, buffer);
   }
 

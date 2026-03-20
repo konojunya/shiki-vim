@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>shiki-vim - Vim-powered code editor component for React</title>
+    <meta name="description" content="A lightweight, vim-like code editor React component with Shiki syntax highlighting. Drop-in vim keybindings for your React app." />
+    <meta property="og:title" content="shiki-vim" />
+    <meta property="og:description" content="Vim-powered code editor component for React with Shiki syntax highlighting" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; }
+      body {
+        -webkit-font-smoothing: antialiased;
+        background: #18181b;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
+        background-size: 48px 48px;
+      }
+      #root { position: relative; z-index: 1; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .quick-start pre { background: transparent !important; margin: 0; padding: 0; }
+      @keyframes toast-in { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+      @keyframes vim-blink { 50% { opacity: 0; } }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

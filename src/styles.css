@@ -29,9 +29,9 @@
   outline: none;
 }
 
-/* フォーカス状態 */
+/* フォーカス状態（--sv-focus-color で有効化可能） */
 .sv-container:focus {
-  outline: 2px solid var(--sv-focus-color, #007acc);
+  outline: 2px solid var(--sv-focus-color, transparent);
   outline-offset: -2px;
 }
 

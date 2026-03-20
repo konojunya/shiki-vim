@@ -156,12 +156,6 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
    */
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      // 読み取り専用モードではインサートモードに入るキーを無視
-      if (readOnly && ctxRef.current.mode === "normal") {
-        const insertKeys = ["i", "a", "o", "I", "A", "O"];
-        if (insertKeys.includes(e.key)) return;
-      }
-
       // IME入力中は無視
       if (e.nativeEvent.isComposing) return;
 
@@ -172,12 +166,13 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
         e.preventDefault();
       }
 
-      // Vimエンジンにキーストロークを渡す
+      // Vimエンジンにキーストロークを渡す（readOnlyフラグで書き込み操作をブロック）
       const { newCtx, actions } = processKeystroke(
         e.key,
         ctxRef.current,
         bufferRef.current,
         e.ctrlKey,
+        readOnly,
       );
 
       // コンテキストを更新

@@ -45,6 +45,7 @@ export function processNormalMode(
   ctx: VimContext,
   buffer: TextBuffer,
   ctrlKey: boolean,
+  readOnly: boolean = false,
 ): KeystrokeResult {
   // --- g プレフィックスペンディング ---
   if (ctx.phase === "g-pending") {
@@ -58,7 +59,24 @@ export function processNormalMode(
 
   // --- Ctrlキーコンビネーション ---
   if (ctrlKey) {
-    return handleCtrlKey(key, ctx, buffer);
+    return handleCtrlKey(key, ctx, buffer, readOnly);
+  }
+
+  // --- readOnly: ミューテーション操作をブロック ---
+  if (readOnly && ctx.phase === "idle") {
+    // prettier-ignore
+    const mutatingKeys = new Set([
+      "i", "a", "o", "I", "A", "O",  // insert entry
+      "x", "p", "P",                   // edit commands
+      "d", "c",                         // mutating operators (y is allowed)
+      "J",                              // join lines
+      "u",                              // undo
+      "r",                              // replace char
+      ":",                              // ex commands
+    ]);
+    if (mutatingKeys.has(key)) {
+      return { newCtx: resetContext(ctx), actions: [] };
+    }
   }
 
   // --- カウント入力 ---

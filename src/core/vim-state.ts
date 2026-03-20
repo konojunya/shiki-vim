@@ -67,21 +67,37 @@ export function parseCursorPosition(pos: string): CursorPosition {
  * @param ctx - 現在のVimコンテキスト
  * @param buffer - テキストバッファ
  * @param ctrlKey - Ctrlキーが押されているか
+ * @param readOnly - 読み取り専用モード
  */
 export function processKeystroke(
   key: string,
   ctx: VimContext,
   buffer: TextBuffer,
   ctrlKey: boolean = false,
+  readOnly: boolean = false,
 ): KeystrokeResult {
   switch (ctx.mode) {
     case "normal":
-      return processNormalMode(key, ctx, buffer, ctrlKey);
+      return processNormalMode(key, ctx, buffer, ctrlKey, readOnly);
     case "insert":
+      // readOnly: insertモードに到達すべきではないが安全のため強制的にnormalへ戻す
+      if (readOnly) {
+        return {
+          newCtx: {
+            ...ctx,
+            mode: "normal",
+            phase: "idle",
+            count: 0,
+            operator: null,
+            statusMessage: "",
+          },
+          actions: [{ type: "mode-change", mode: "normal" }],
+        };
+      }
       return processInsertMode(key, ctx, buffer, ctrlKey);
     case "visual":
     case "visual-line":
-      return processVisualMode(key, ctx, buffer, ctrlKey);
+      return processVisualMode(key, ctx, buffer, ctrlKey, readOnly);
     case "command-line":
       return processCommandLineMode(key, ctx, buffer);
     default:

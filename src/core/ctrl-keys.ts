@@ -19,9 +19,12 @@ export function handleCtrlKey(
   key: string,
   ctx: VimContext,
   buffer: TextBuffer,
+  readOnly: boolean = false,
 ): KeystrokeResult {
   switch (key) {
     case "r":
+      // readOnly: redo をブロック
+      if (readOnly) return { newCtx: ctx, actions: [] };
       return handleCtrlR(ctx, buffer);
     case "u":
       return handleCtrlU(ctx);
