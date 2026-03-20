@@ -8,6 +8,8 @@ import {
   motionW,
   motionE,
   motionB,
+  motionBigW,
+  motionBigB,
   motionZero,
   motionCaret,
   motionDollar,
@@ -895,5 +897,71 @@ describe("Edge cases", () => {
     const b = buf(["hello    world"]);
     const result = motionW(cur(0, 0), b, 1);
     expect(result.cursor).toEqual(cur(0, 9));
+  });
+
+  // --- motionBigW ---
+  it("motionBigW: skips punctuation as part of the WORD", () => {
+    const b = buf(["foo.bar baz"]);
+    // w would stop at '.', W treats foo.bar as one WORD
+    const result = motionBigW(cur(0, 0), b, 1);
+    expect(result.cursor).toEqual(cur(0, 8));
+  });
+
+  it("motionBigW: moves across whitespace to next WORD", () => {
+    const b = buf(["hello   world"]);
+    const result = motionBigW(cur(0, 0), b, 1);
+    expect(result.cursor).toEqual(cur(0, 8));
+  });
+
+  it("motionBigW: moves to next line when at end of current line", () => {
+    const b = buf(["hello", "world"]);
+    const result = motionBigW(cur(0, 0), b, 1);
+    expect(result.cursor).toEqual(cur(1, 0));
+  });
+
+  it("motionBigW: count=2 skips two WORDs", () => {
+    // "one-two three.four five"
+    //  0       8              19
+    const b = buf(["one-two three.four five"]);
+    const result = motionBigW(cur(0, 0), b, 2);
+    expect(result.cursor).toEqual(cur(0, 19));
+  });
+
+  it("motionBigW: stays at end of file when no more WORDs", () => {
+    const b = buf(["hello"]);
+    const result = motionBigW(cur(0, 0), b, 1);
+    expect(result.cursor).toEqual(cur(0, 0));
+  });
+
+  // --- motionBigB ---
+  it("motionBigB: skips punctuation as part of the WORD backwards", () => {
+    const b = buf(["foo.bar baz"]);
+    // From 'baz', B goes back to 'foo.bar'
+    const result = motionBigB(cur(0, 8), b, 1);
+    expect(result.cursor).toEqual(cur(0, 0));
+  });
+
+  it("motionBigB: moves back across whitespace", () => {
+    const b = buf(["hello   world"]);
+    const result = motionBigB(cur(0, 8), b, 1);
+    expect(result.cursor).toEqual(cur(0, 0));
+  });
+
+  it("motionBigB: moves to previous line", () => {
+    const b = buf(["hello", "world"]);
+    const result = motionBigB(cur(1, 0), b, 1);
+    expect(result.cursor).toEqual(cur(0, 0));
+  });
+
+  it("motionBigB: count=2 skips two WORDs backwards", () => {
+    const b = buf(["one-two three.four five"]);
+    const result = motionBigB(cur(0, 18), b, 2);
+    expect(result.cursor).toEqual(cur(0, 0));
+  });
+
+  it("motionBigB: stays at beginning of file", () => {
+    const b = buf(["hello"]);
+    const result = motionBigB(cur(0, 0), b, 1);
+    expect(result.cursor).toEqual(cur(0, 0));
   });
 });

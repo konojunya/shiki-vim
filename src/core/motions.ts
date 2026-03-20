@@ -298,6 +298,109 @@ export function motionB(
   };
 }
 
+/**
+ * W: Move forward by WORD (whitespace-delimited)
+ */
+export function motionBigW(
+  cursor: CursorPosition,
+  buffer: TextBuffer,
+  count: number,
+): MotionResult {
+  let { line, col } = cursor;
+
+  for (let i = 0; i < count; i++) {
+    const prevLine = line;
+    const prevCol = col;
+    const text = buffer.getLine(line);
+
+    if (col >= text.length) {
+      if (line < buffer.getLineCount() - 1) {
+        line++;
+        col = 0;
+      }
+      continue;
+    }
+
+    // Skip non-whitespace
+    while (col < text.length && text[col] !== " " && text[col] !== "\t") col++;
+    // Skip whitespace
+    while (col < text.length && (text[col] === " " || text[col] === "\t")) col++;
+
+    if (col >= text.length) {
+      if (line < buffer.getLineCount() - 1) {
+        line++;
+        col = 0;
+      } else {
+        line = prevLine;
+        col = prevCol;
+        break;
+      }
+    }
+  }
+
+  const clampedLine = clampLine(line, buffer);
+  const lineLen = buffer.getLineLength(clampedLine);
+  const newCursor = {
+    line: clampedLine,
+    col: lineLen > 0 ? Math.min(Math.max(0, col), lineLen - 1) : 0,
+  };
+  return {
+    cursor: newCursor,
+    range: {
+      start: cursor,
+      end: newCursor,
+      linewise: false,
+      inclusive: false,
+    },
+  };
+}
+
+/**
+ * B: Move backward by WORD (whitespace-delimited)
+ */
+export function motionBigB(
+  cursor: CursorPosition,
+  buffer: TextBuffer,
+  count: number,
+): MotionResult {
+  let { line, col } = cursor;
+
+  for (let i = 0; i < count; i++) {
+    col--;
+
+    // Go to previous line if at start
+    while (col < 0) {
+      if (line <= 0) {
+        col = 0;
+        break;
+      }
+      line--;
+      col = buffer.getLineLength(line) - 1;
+    }
+
+    const text = buffer.getLine(line);
+    // Skip whitespace backwards
+    while (col > 0 && (text[col] === " " || text[col] === "\t")) col--;
+
+    // Skip non-whitespace backwards
+    while (col > 0 && text[col - 1] !== " " && text[col - 1] !== "\t") col--;
+  }
+
+  const newCursor = {
+    line: clampLine(line, buffer),
+    col: Math.max(0, col),
+  };
+  return {
+    cursor: newCursor,
+    range: {
+      start: newCursor,
+      end: cursor,
+      linewise: false,
+      inclusive: false,
+    },
+  };
+}
+
 export function motionZero(
   cursor: CursorPosition,
   _buffer: TextBuffer,
@@ -389,6 +492,82 @@ export function motionG(
     range: {
       start: cursor.line < targetLine ? cursor : newCursor,
       end: cursor.line < targetLine ? newCursor : cursor,
+      linewise: true,
+      inclusive: true,
+    },
+  };
+}
+
+/**
+ * H: Move to top of viewport
+ */
+export function motionBigH(
+  cursor: CursorPosition,
+  buffer: TextBuffer,
+  count: number,
+  viewportTopLine: number,
+): MotionResult {
+  // H with count goes to Nth line from top of viewport
+  const targetLine = clampLine(viewportTopLine + (count - 1), buffer);
+  const col = firstNonBlank(buffer.getLine(targetLine));
+  const newCursor = { line: targetLine, col };
+  return {
+    cursor: newCursor,
+    range: {
+      start: targetLine < cursor.line ? newCursor : cursor,
+      end: targetLine < cursor.line ? cursor : newCursor,
+      linewise: true,
+      inclusive: true,
+    },
+  };
+}
+
+/**
+ * M: Move to middle of viewport
+ */
+export function motionBigM(
+  cursor: CursorPosition,
+  buffer: TextBuffer,
+  viewportTopLine: number,
+  viewportHeight: number,
+): MotionResult {
+  const targetLine = clampLine(
+    viewportTopLine + Math.floor(viewportHeight / 2),
+    buffer,
+  );
+  const col = firstNonBlank(buffer.getLine(targetLine));
+  const newCursor = { line: targetLine, col };
+  return {
+    cursor: newCursor,
+    range: {
+      start: targetLine < cursor.line ? newCursor : cursor,
+      end: targetLine < cursor.line ? cursor : newCursor,
+      linewise: true,
+      inclusive: true,
+    },
+  };
+}
+
+/**
+ * L: Move to bottom of viewport
+ */
+export function motionBigL(
+  cursor: CursorPosition,
+  buffer: TextBuffer,
+  count: number,
+  viewportTopLine: number,
+  viewportHeight: number,
+): MotionResult {
+  // L with count goes to Nth line from bottom of viewport
+  const bottomLine = viewportTopLine + viewportHeight - 1;
+  const targetLine = clampLine(bottomLine - (count - 1), buffer);
+  const col = firstNonBlank(buffer.getLine(targetLine));
+  const newCursor = { line: targetLine, col };
+  return {
+    cursor: newCursor,
+    range: {
+      start: targetLine < cursor.line ? newCursor : cursor,
+      end: targetLine < cursor.line ? cursor : newCursor,
       linewise: true,
       inclusive: true,
     },

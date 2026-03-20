@@ -6,7 +6,7 @@
  * and resolves the appropriate motion from a single key.
  */
 
-import type { CursorPosition } from "../types";
+import type { CursorPosition, VimContext } from "../types";
 import type { TextBuffer } from "./buffer";
 import type { MotionResult } from "./motions";
 import {
@@ -17,6 +17,11 @@ import {
   motionW,
   motionE,
   motionB,
+  motionBigW,
+  motionBigB,
+  motionBigH,
+  motionBigM,
+  motionBigL,
   motionZero,
   motionCaret,
   motionDollar,
@@ -32,6 +37,7 @@ import {
  * @param buffer - The text buffer
  * @param count - The repeat count
  * @param countExplicit - Whether the count was explicitly specified
+ * @param ctx - The full VimContext (for viewport-dependent motions)
  * @returns The motion result, or null if no motion matches
  */
 export function resolveMotion(
@@ -40,6 +46,7 @@ export function resolveMotion(
   buffer: TextBuffer,
   count: number,
   countExplicit: boolean,
+  ctx?: VimContext,
 ): MotionResult | null {
   switch (key) {
     // --- Basic movement ---
@@ -69,6 +76,12 @@ export function resolveMotion(
     case "b":
       return motionB(cursor, buffer, count);
 
+    case "W":
+      return motionBigW(cursor, buffer, count);
+
+    case "B":
+      return motionBigB(cursor, buffer, count);
+
     // --- Intra-line movement ---
     case "0":
       return motionZero(cursor, buffer, count);
@@ -83,6 +96,27 @@ export function resolveMotion(
     case "G":
       // G: with count -> go to specified line, without count -> go to end of file
       return motionG(cursor, buffer, countExplicit ? count : null);
+
+    // --- Screen-relative movement ---
+    case "H":
+      return motionBigH(
+        cursor, buffer, count,
+        ctx?.viewportTopLine ?? 0,
+      );
+
+    case "M":
+      return motionBigM(
+        cursor, buffer,
+        ctx?.viewportTopLine ?? 0,
+        ctx?.viewportHeight ?? 50,
+      );
+
+    case "L":
+      return motionBigL(
+        cursor, buffer, count,
+        ctx?.viewportTopLine ?? 0,
+        ctx?.viewportHeight ?? 50,
+      );
 
     // --- Bracket matching ---
     case "%":
