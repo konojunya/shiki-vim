@@ -61,6 +61,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/konojunya/shiki-vim"
+    "url": "git+https://github.com/konojunya/shiki-vim.git"
   }
 }
