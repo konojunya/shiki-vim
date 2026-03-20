@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="sites/public/icon.svg" alt="shiki-vim" width="80" />
-</p>
+<img src="sites/public/ogp.png" alt="shiki-vim" width="100%" />
 
 <h1 align="center">shiki-vim</h1>
 
@@ -88,6 +86,9 @@ function App() {
 | `shikiOptions` | `Record<string, unknown>` | — | Additional options passed to Shiki's `codeToTokens` |
 | `cursorPosition` | `string` | `"1:1"` | Initial cursor position (`"line:col"`, 1-based) |
 | `readOnly` | `boolean` | `false` | Disable editing (motions still work) |
+| `autoFocus` | `boolean` | `false` | Focus the editor on mount |
+| `indentStyle` | `"space" \| "tab"` | `"space"` | Use spaces or tabs for indentation |
+| `indentWidth` | `number` | `2` | Number of spaces (or tab width) per indent level |
 | `showLineNumbers` | `boolean` | `true` | Show line number gutter |
 | `className` | `string` | — | Additional class for the container |
 
@@ -99,6 +100,7 @@ function App() {
 | `onYank` | `(text: string) => void` | Text yanked (`yy`, `dw`, etc.) |
 | `onSave` | `(content: string) => void` | `:w` command |
 | `onModeChange` | `(mode: VimMode) => void` | Mode transition |
+| `onAction` | `(action: VimAction, key: string) => void` | Every vim engine action (for debugging / logging) |
 
 ## Keybindings
 
@@ -156,6 +158,8 @@ function App() {
 | `Ctrl-U` / `Ctrl-D` | Half page up / down |
 | `:w` | Save |
 | `:{number}` | Go to line |
+| `:set number` (`:set nu`) | Show line numbers |
+| `:set nonumber` (`:set nonu`) | Hide line numbers |
 
 ## Styling
 
@@ -206,14 +210,43 @@ Contributions welcome for any of these:
 
 ## Contributing
 
+### Setup
+
 ```bash
 bun install
-bun run dev         # Watch mode
-bun run test        # Run tests (360 cases)
+bun run dev         # Watch mode (builds the library)
+bun run test        # Run tests
 bun run typecheck   # Type check
 bun run lint        # oxlint
 bun run fmt         # oxfmt
 ```
+
+### Debug App
+
+A local debug app lives in `debug/`. It references the shiki-vim source directly via Vite aliases — no build step needed for live feedback.
+
+```bash
+cd debug
+bun install
+bun run dev
+```
+
+The debug app includes:
+
+- **Theme / Language selectors** — switch Shiki themes and languages on the fly
+- **CSS variable controls** — adjust colors, font size, line height, etc. with color pickers and sliders
+- **Operation history** — every vim action is logged with the triggering key (`<cursor-move> [j] -> 5:1`)
+- **"Copy for LLM" button** — copies the full operation log, editor state, and settings as a markdown report you can paste directly into a bug report or LLM conversation
+
+Changes to files under `src/` are reflected immediately in the debug app via HMR.
+
+### Workflow
+
+1. Start the debug app (`cd debug && bun run dev`)
+2. Make changes to the library source in `src/`
+3. Test your changes interactively in the browser
+4. Use "Copy for LLM" in the history panel if you need to report unexpected behavior
+5. Run `bun run test` before submitting a PR
 
 PRs are welcome! Please make sure `bun run test` and `bun run typecheck` pass before submitting.
 

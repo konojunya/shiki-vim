@@ -11,11 +11,14 @@
  * calculated using `ch` / `lh` units of a monospace font.
  */
 
+import { useState, useEffect, useRef } from "react";
 import type { CursorPosition, VimMode } from "../types";
 
 export interface CursorProps {
   /** Cursor position (0-based) */
   position: CursorPosition;
+  /** Visual column (accounting for tab width) */
+  visualCol: number;
   /** Current Vim mode */
   mode: VimMode;
   /** Whether line numbers are displayed */
@@ -30,14 +33,28 @@ export interface CursorProps {
  * Displayed as an overlay using absolute positioning.
  * left / top are calculated accounting for the line number gutter offset.
  */
+const BLINK_RESTART_DELAY = 500;
+
 export function Cursor({
   position,
+  visualCol,
   mode,
   showLineNumbers,
   gutterWidth,
 }: CursorProps) {
   // Determine cursor shape based on the mode
   const cursorClass = getCursorClass(mode);
+
+  // Pause blink while cursor is moving, resume after idle
+  const [blinking, setBlinking] = useState(true);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    setBlinking(false);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setBlinking(true), BLINK_RESTART_DELAY);
+    return () => clearTimeout(timerRef.current);
+  }, [position.line, position.col]);
 
   // Gutter offset (only when line numbers are displayed)
   // gutterWidth ch + 1ch padding
@@ -49,8 +66,10 @@ export function Cursor({
       style={{
         // Set cursor position via CSS variables
         // ch unit: based on the width of "0" in a monospace font
-        ["--cursor-col" as string]: position.col + gutterOffset,
+        ["--cursor-col" as string]: visualCol + gutterOffset,
         ["--cursor-line" as string]: position.line,
+        animation: blinking ? undefined : "none",
+        opacity: blinking ? undefined : 1,
       }}
       aria-hidden="true"
     />

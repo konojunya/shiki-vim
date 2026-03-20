@@ -105,9 +105,16 @@ function executeExCommand(
       actions.push({ type: "save", content: buffer.getContent() });
       break;
 
-    // TODO: Add other ex commands
-    // case "q": ...
-    // case "wq": ...
+    case "set number":
+    case "set nu":
+      actions.push({ type: "set-option", option: "number", value: true });
+      break;
+
+    case "set nonumber":
+    case "set nonu":
+      actions.push({ type: "set-option", option: "number", value: false });
+      break;
+
     default: {
       // If numeric, jump to that line
       const lineNum = Number.parseInt(cmd.trim(), 10);

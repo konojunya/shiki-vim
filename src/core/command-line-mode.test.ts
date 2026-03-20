@@ -272,6 +272,54 @@ describe("Command-line mode", () => {
   });
 
   // ---------------------------------------------------
+  // :set number / :set nonumber
+  // ---------------------------------------------------
+  describe(":set number / :set nonumber", () => {
+    it("emits set-option number=true with :set number", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createCommandLineContext({ line: 0, col: 0 }, ":");
+      const { ctx: result, allActions } = pressKeys(
+        [..."set number", "Enter"],
+        ctx,
+        buffer,
+      );
+      expect(result.mode).toBe("normal");
+      expect(allActions).toContainEqual({
+        type: "set-option",
+        option: "number",
+        value: true,
+      });
+    });
+
+    it("emits set-option number=false with :set nonumber", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx = createCommandLineContext({ line: 0, col: 0 }, ":");
+      const { ctx: result, allActions } = pressKeys(
+        [..."set nonumber", "Enter"],
+        ctx,
+        buffer,
+      );
+      expect(result.mode).toBe("normal");
+      expect(allActions).toContainEqual({
+        type: "set-option",
+        option: "number",
+        value: false,
+      });
+    });
+
+    it("emits set-option with short form :set nu / :set nonu", () => {
+      const buffer = new TextBuffer("hello");
+      const ctx1 = createCommandLineContext({ line: 0, col: 0 }, ":");
+      const { allActions: a1 } = pressKeys([..."set nu", "Enter"], ctx1, buffer);
+      expect(a1).toContainEqual({ type: "set-option", option: "number", value: true });
+
+      const ctx2 = createCommandLineContext({ line: 0, col: 0 }, ":");
+      const { allActions: a2 } = pressKeys([..."set nonu", "Enter"], ctx2, buffer);
+      expect(a2).toContainEqual({ type: "set-option", option: "number", value: false });
+    });
+  });
+
+  // ---------------------------------------------------
   // Integration test: search from normal mode and return
   // ---------------------------------------------------
   describe("Integration tests", () => {

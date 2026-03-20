@@ -23,24 +23,14 @@
       html { scroll-behavior: smooth; }
       body {
         -webkit-font-smoothing: antialiased;
-        background: #18181b;
-      }
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: 0;
-        pointer-events: none;
-        background-image:
-          linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
-        background-size: 48px 48px;
+        background: linear-gradient(rgba(10,20,40,0.35), rgba(10,20,40,0.35)), #0A0F1A url("/background.svg") no-repeat left center / cover fixed;
       }
       #root { position: relative; z-index: 1; }
       @keyframes spin { to { transform: rotate(360deg); } }
       .quick-start pre { background: transparent !important; margin: 0; padding: 0; }
       @keyframes toast-in { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
       @keyframes vim-blink { 50% { opacity: 0; } }
+      @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
   </head>
   <body>

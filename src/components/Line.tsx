@@ -24,6 +24,8 @@ export interface LineProps {
   selectionStartCol?: number;
   /** Selection end column within the line (for character-wise selection) */
   selectionEndCol?: number;
+  /** Search match ranges on this line as [startCol, endCol] pairs */
+  searchMatches?: [number, number][];
 }
 
 /**
@@ -40,6 +42,7 @@ export function Line({
   isSelected,
   selectionStartCol,
   selectionEndCol,
+  searchMatches,
 }: LineProps) {
   // Calculate line number digit width (to align across all lines)
   const gutterWidth = String(totalLines).length;
@@ -65,7 +68,7 @@ export function Line({
           // Empty line: insert invisible character to maintain height
           <span>{"\n"}</span>
         ) : (
-          renderTokens(tokens, isSelected, selectionStartCol, selectionEndCol)
+          renderTokens(tokens, isSelected, selectionStartCol, selectionEndCol, searchMatches)
         )}
       </span>
     </div>
@@ -81,6 +84,7 @@ function renderTokens(
   isSelected: boolean,
   selectionStartCol?: number,
   selectionEndCol?: number,
+  searchMatches?: [number, number][],
 ): React.ReactNode[] {
   // Entire line is selected (visual-line mode)
   if (isSelected && selectionStartCol === undefined) {
@@ -95,21 +99,26 @@ function renderTokens(
     ));
   }
 
-  // Normal rendering when there is no character-wise selection
-  if (selectionStartCol === undefined || selectionEndCol === undefined) {
-    return tokens.map((token, i) => (
-      <span
-        key={i}
-        className="sv-token"
-        style={{ color: token.color }}
-      >
-        {token.content}
-      </span>
-    ));
+  // Character-wise selection present: split tokens and highlight
+  if (selectionStartCol !== undefined && selectionEndCol !== undefined) {
+    return renderTokensWithSelection(tokens, selectionStartCol, selectionEndCol);
   }
 
-  // Character-wise selection present: split tokens and highlight
-  return renderTokensWithSelection(tokens, selectionStartCol, selectionEndCol);
+  // Search match highlighting
+  if (searchMatches && searchMatches.length > 0) {
+    return renderTokensWithSearch(tokens, searchMatches);
+  }
+
+  // Normal rendering
+  return tokens.map((token, i) => (
+    <span
+      key={i}
+      className="sv-token"
+      style={{ color: token.color }}
+    >
+      {token.content}
+    </span>
+  ));
 }
 
 /**
@@ -210,4 +219,67 @@ function splitTokenBySelection(
   }
 
   return parts;
+}
+
+/**
+ * Render tokens with search match highlighting.
+ * Splits tokens at match boundaries and applies the sv-search-match class.
+ */
+function renderTokensWithSearch(
+  tokens: ThemedToken[],
+  matches: [number, number][],
+): React.ReactNode[] {
+  const result: React.ReactNode[] = [];
+  let col = 0;
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    const tokenStart = col;
+    const tokenEnd = col + token.content.length;
+
+    // Find matches that overlap with this token
+    const overlapping = matches.filter(
+      ([ms, me]) => ms < tokenEnd && me > tokenStart,
+    );
+
+    if (overlapping.length === 0) {
+      result.push(
+        <span key={`${i}`} className="sv-token" style={{ color: token.color }}>
+          {token.content}
+        </span>,
+      );
+    } else {
+      // Split the token at each match boundary
+      let pos = 0;
+      for (const [ms, me] of overlapping) {
+        const relStart = Math.max(0, ms - tokenStart);
+        const relEnd = Math.min(token.content.length, me - tokenStart);
+
+        if (relStart > pos) {
+          result.push(
+            <span key={`${i}-b${pos}`} className="sv-token" style={{ color: token.color }}>
+              {token.content.slice(pos, relStart)}
+            </span>,
+          );
+        }
+        result.push(
+          <span key={`${i}-m${relStart}`} className="sv-token sv-search-match" style={{ color: token.color }}>
+            {token.content.slice(relStart, relEnd)}
+          </span>,
+        );
+        pos = relEnd;
+      }
+      if (pos < token.content.length) {
+        result.push(
+          <span key={`${i}-a${pos}`} className="sv-token" style={{ color: token.color }}>
+            {token.content.slice(pos)}
+          </span>,
+        );
+      }
+    }
+
+    col = tokenEnd;
+  }
+
+  return result;
 }

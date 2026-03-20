@@ -30,7 +30,7 @@ export function searchInBuffer(
   // Compile the pattern as a regular expression
   let regex: RegExp;
   try {
-    regex = new RegExp(pattern, "g");
+    regex = new RegExp(pattern, "gi");
   } catch {
     // Return null for invalid regular expressions
     return null;

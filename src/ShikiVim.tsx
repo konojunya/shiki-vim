@@ -25,7 +25,7 @@
  * ```
  */
 
-import { useRef, useCallback, useMemo } from "react";
+import { useRef, useCallback, useMemo, useEffect } from "react";
 import type { ShikiVimProps, CursorPosition } from "./types";
 import { useShikiTokens } from "./hooks/useShikiTokens";
 import { useVimEngine } from "./hooks/useVimEngine";
@@ -50,12 +50,20 @@ export default function ShikiVim({
   onYank,
   onSave,
   onModeChange,
+  onAction,
   className,
   readOnly = false,
+  autoFocus = false,
+  indentStyle,
+  indentWidth,
   showLineNumbers = true,
 }: ShikiVimProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const codeAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (autoFocus) containerRef.current?.focus();
+  }, [autoFocus]);
 
   // --- Vim engine ---
   const engine = useVimEngine({
@@ -66,6 +74,9 @@ export default function ShikiVim({
     onYank,
     onSave,
     onModeChange,
+    onAction,
+    indentStyle,
+    indentWidth,
   });
 
   // --- Shiki tokenization ---
@@ -77,9 +88,55 @@ export default function ShikiVim({
     shikiOptions,
   );
 
+  // --- Line numbers (prop overridden by :set number / :set nonumber) ---
+  const effectiveShowLineNumbers =
+    engine.options.number !== undefined ? engine.options.number : showLineNumbers;
+
   // --- Calculate gutter width for line numbers ---
   const totalLines = tokenLines.length;
   const gutterWidth = String(totalLines).length;
+
+  // --- Calculate visual column (accounting for tab width) ---
+  const visualCol = useMemo(() => {
+    const lines = engine.content.split("\n");
+    const line = lines[engine.cursor.line] ?? "";
+    const tabSize = 4;
+    let col = 0;
+    for (let i = 0; i < engine.cursor.col && i < line.length; i++) {
+      if (line[i] === "\t") {
+        col += tabSize - (col % tabSize);
+      } else {
+        col++;
+      }
+    }
+    return col;
+  }, [engine.content, engine.cursor.line, engine.cursor.col]);
+
+  // --- Calculate search match positions per line ---
+  // Only highlights while actively typing a search (/ or ?).
+  // Clears when returning to normal mode.
+  const searchMatchesByLine = useMemo(() => {
+    if (!engine.commandLine || !(engine.commandLine.startsWith("/") || engine.commandLine.startsWith("?"))) {
+      return {};
+    }
+    const pattern = engine.commandLine.slice(1);
+    if (!pattern) return {};
+    let regex: RegExp;
+    try {
+      regex = new RegExp(pattern, "gi");
+    } catch {
+      return {};
+    }
+    const lines = engine.content.split("\n");
+    const result: Record<number, [number, number][]> = {};
+    for (let i = 0; i < lines.length; i++) {
+      const matches = [...lines[i].matchAll(regex)];
+      if (matches.length > 0) {
+        result[i] = matches.map((m) => [m.index!, m.index! + m[0].length]);
+      }
+    }
+    return result;
+  }, [engine.content, engine.commandLine]);
 
   // --- Calculate visual selection range ---
   const selectionInfo = useMemo(() => {
@@ -90,6 +147,24 @@ export default function ShikiVim({
       totalLines,
     );
   }, [engine.mode, engine.visualAnchor, engine.cursor, totalLines]);
+
+  // --- Scroll to keep cursor visible ---
+  useEffect(() => {
+    const area = codeAreaRef.current;
+    if (!area) return;
+    const lineHeight = parseFloat(getComputedStyle(area).lineHeight);
+    if (!lineHeight) return;
+
+    const padding = 8; // sv-code-area padding-top
+    const cursorTop = engine.cursor.line * lineHeight + padding;
+    const cursorBottom = cursorTop + lineHeight;
+
+    if (cursorTop < area.scrollTop) {
+      area.scrollTop = cursorTop;
+    } else if (cursorBottom > area.scrollTop + area.clientHeight) {
+      area.scrollTop = cursorBottom - area.clientHeight;
+    }
+  }, [engine.cursor.line]);
 
   // --- Scroll handling (Ctrl-U/D) ---
   const handleKeyDown = useCallback(
@@ -134,8 +209,9 @@ export default function ShikiVim({
         {/* Cursor (overlay) */}
         <Cursor
           position={engine.cursor}
+          visualCol={visualCol}
           mode={engine.mode}
-          showLineNumbers={showLineNumbers}
+          showLineNumbers={effectiveShowLineNumbers}
           gutterWidth={gutterWidth}
         />
 
@@ -145,11 +221,12 @@ export default function ShikiVim({
             key={lineIndex}
             lineIndex={lineIndex}
             tokens={tokens}
-            showLineNumbers={showLineNumbers}
+            showLineNumbers={effectiveShowLineNumbers}
             totalLines={totalLines}
             isSelected={selectionInfo.isLineSelected(lineIndex)}
             selectionStartCol={selectionInfo.getSelectionStartCol(lineIndex)}
             selectionEndCol={selectionInfo.getSelectionEndCol(lineIndex)}
+            searchMatches={searchMatchesByLine[lineIndex]}
           />
         ))}
       </div>

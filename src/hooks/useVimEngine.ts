@@ -37,6 +37,12 @@ export interface VimEngineOptions {
   onSave?: (content: string) => void;
   /** Callback when mode changes */
   onModeChange?: (mode: VimMode) => void;
+  /** Callback for every action emitted by the vim engine */
+  onAction?: (action: VimAction, key: string) => void;
+  /** Indent style: "space" or "tab" */
+  indentStyle?: "space" | "tab";
+  /** Number of spaces (or tab width) per indent level */
+  indentWidth?: number;
 }
 
 /** Return value of useVimEngine */
@@ -53,6 +59,10 @@ export interface VimEngineState {
   visualAnchor: CursorPosition | null;
   /** Input buffer for the command line */
   commandLine: string;
+  /** Vim options set via :set commands */
+  options: Record<string, boolean>;
+  /** Last search pattern (for highlighting matches) */
+  lastSearch: string;
   /** Keyboard event handler */
   handleKeyDown: (e: React.KeyboardEvent) => void;
   /** Scroll event handler (for half-page scrolling) */
@@ -74,6 +84,9 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
     onYank,
     onSave,
     onModeChange,
+    onAction,
+    indentStyle,
+    indentWidth,
   } = options;
 
   // TextBuffer is managed via ref (due to frequent mutations)
@@ -81,7 +94,7 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
 
   // VimContext is also managed via ref (parser intermediate state does not need rendering)
   const ctxRef = useRef<VimContext>(
-    createInitialContext(parseCursorPosition(cursorPosition)),
+    createInitialContext(parseCursorPosition(cursorPosition), { indentStyle, indentWidth }),
   );
 
   // Display-related state
@@ -95,13 +108,16 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
     null,
   );
   const [commandLine, setCommandLine] = useState("");
+  const [vimOptions, setVimOptions] = useState<Record<string, boolean>>({});
 
   /**
    * Process the action list and update React state and callbacks.
    */
   const processActions = useCallback(
-    (actions: VimAction[], newCtx: VimContext) => {
+    (actions: VimAction[], newCtx: VimContext, key: string) => {
       for (const action of actions) {
+        onAction?.(action, key);
+
         switch (action.type) {
           case "cursor-move":
             setCursor(action.position);
@@ -129,6 +145,10 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
             // statusMessage is set from ctx
             break;
 
+          case "set-option":
+            setVimOptions((prev) => ({ ...prev, [action.option]: action.value }));
+            break;
+
           case "scroll":
             // Scroll is handled on the component side
             break;
@@ -147,7 +167,7 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
           : "",
       );
     },
-    [onChange, onYank, onSave, onModeChange],
+    [onChange, onYank, onSave, onModeChange, onAction],
   );
 
   /**
@@ -179,7 +199,7 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
       ctxRef.current = newCtx;
 
       // Process actions
-      processActions(actions, newCtx);
+      processActions(actions, newCtx, e.key);
     },
     [readOnly, processActions],
   );
@@ -218,6 +238,8 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
     statusMessage,
     visualAnchor,
     commandLine,
+    options: vimOptions,
+    lastSearch: ctxRef.current.lastSearch,
     handleKeyDown,
     handleScroll,
   };

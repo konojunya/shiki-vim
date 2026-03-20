@@ -55,6 +55,8 @@ export interface VimContext {
   searchDirection: "forward" | "backward";
   charCommand: CharCommand | null;
   statusMessage: string;
+  indentStyle: "space" | "tab";
+  indentWidth: number;
 }
 
 /**
@@ -68,6 +70,7 @@ export type VimAction =
   | { type: "save"; content: string }
   | { type: "status-message"; message: string }
   | { type: "scroll"; direction: "up" | "down"; amount: number }
+  | { type: "set-option"; option: string; value: boolean }
   | { type: "noop" };
 
 /**
@@ -102,10 +105,18 @@ export interface ShikiVimProps {
   onSave?: (content: string) => void;
   /** Called when mode changes */
   onModeChange?: (mode: VimMode) => void;
+  /** Called for every action emitted by the vim engine (useful for debugging) */
+  onAction?: (action: VimAction, key: string) => void;
   /** Additional class name for the container */
   className?: string;
   /** Whether the editor is read-only */
   readOnly?: boolean;
+  /** Whether the editor should be focused on mount */
+  autoFocus?: boolean;
+  /** Indent style: "space" or "tab". Default: "space" */
+  indentStyle?: "space" | "tab";
+  /** Number of spaces (or tab width) per indent level. Default: 2 */
+  indentWidth?: number;
   /** Whether to show line numbers. Default: true */
   showLineNumbers?: boolean;
 }
