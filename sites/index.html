@@ -23,7 +23,12 @@
       html { scroll-behavior: smooth; }
       body {
         -webkit-font-smoothing: antialiased;
-        background: linear-gradient(rgba(10,20,40,0.35), rgba(10,20,40,0.35)), #0A0F1A url("/background.svg") no-repeat left center / cover fixed;
+        background-color: #0A0F1A;
+        background-image: linear-gradient(rgba(10,20,40,0.35), rgba(10,20,40,0.35)), url("/background.svg");
+        background-repeat: no-repeat;
+        background-position: left center;
+        background-size: cover;
+        background-attachment: fixed;
       }
       #root { position: relative; z-index: 1; }
       @keyframes spin { to { transform: rotate(360deg); } }
