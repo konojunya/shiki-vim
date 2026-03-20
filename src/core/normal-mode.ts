@@ -337,7 +337,7 @@ function handleOperatorPending(
   if (key === ctx.operator) {
     buffer.saveUndoPoint(ctx.cursor);
     const count = getEffectiveCount(ctx);
-    const result = executeLineOperator(ctx.operator!, ctx.cursor, count, buffer);
+    const result = executeLineOperator(ctx.operator!, ctx.cursor, count, buffer, indentOpts(ctx));
 
     return {
       newCtx: {

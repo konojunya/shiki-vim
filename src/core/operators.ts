@@ -277,6 +277,7 @@ export function executeLineOperator(
   cursor: CursorPosition,
   count: number,
   buffer: TextBuffer,
+  indentOptions?: { style: "space" | "tab"; width: number },
 ): OperatorResult {
   const startLine = cursor.line;
   const endLine = Math.min(startLine + count - 1, buffer.getLineCount() - 1);
@@ -288,5 +289,5 @@ export function executeLineOperator(
     inclusive: true,
   };
 
-  return executeOperatorOnRange(operator, range, buffer, cursor);
+  return executeOperatorOnRange(operator, range, buffer, cursor, indentOptions);
 }
