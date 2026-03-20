@@ -166,28 +166,54 @@ export default function ShikiVim({
     }
   }, [engine.cursor.line]);
 
-  // --- Scroll handling (Ctrl-U/D) ---
+  // --- Scroll handling (Ctrl-B/F/U/D) ---
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       engine.handleKeyDown(e);
 
-      // Scroll handling for Ctrl-U/D
-      if (e.ctrlKey && (e.key === "u" || e.key === "d")) {
-        if (codeAreaRef.current) {
+      if (e.ctrlKey && codeAreaRef.current) {
+        const scrollKeys: Record<string, { direction: "up" | "down"; amount: number }> = {
+          b: { direction: "up", amount: 1.0 },
+          f: { direction: "down", amount: 1.0 },
+          u: { direction: "up", amount: 0.5 },
+          d: { direction: "down", amount: 0.5 },
+        };
+        const scroll = scrollKeys[e.key];
+        if (scroll) {
           const areaHeight = codeAreaRef.current.clientHeight;
           const lineHeight = parseFloat(
             getComputedStyle(codeAreaRef.current).lineHeight,
           );
           const visibleLines = Math.floor(areaHeight / lineHeight);
-          engine.handleScroll(
-            e.key === "u" ? "up" : "down",
-            visibleLines,
-          );
+          engine.handleScroll(scroll.direction, visibleLines, scroll.amount);
         }
       }
     },
     [engine],
   );
+
+  // --- Update viewport info for H/M/L motions ---
+  useEffect(() => {
+    const area = codeAreaRef.current;
+    if (!area) return;
+
+    const updateViewportInfo = () => {
+      const lineHeight = parseFloat(getComputedStyle(area).lineHeight);
+      if (!lineHeight) return;
+      const padding = 8;
+      const topLine = Math.floor((area.scrollTop - padding) / lineHeight);
+      const visibleLines = Math.floor(area.clientHeight / lineHeight);
+      engine.updateViewport(Math.max(0, topLine), visibleLines);
+    };
+
+    updateViewportInfo();
+    area.addEventListener("scroll", updateViewportInfo);
+    window.addEventListener("resize", updateViewportInfo);
+    return () => {
+      area.removeEventListener("scroll", updateViewportInfo);
+      window.removeEventListener("resize", updateViewportInfo);
+    };
+  }, [engine]);
 
   return (
     <div
