@@ -802,7 +802,6 @@ function Dot() {
 // ---------------------------------------------------------------------------
 
 const page: React.CSSProperties = {
-  minHeight: "100dvh",
   color: C.fg,
   fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
   background: "transparent",
