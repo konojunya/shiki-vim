@@ -72,6 +72,24 @@ export function processVisualMode(
     };
   }
 
+  // --- Register pending ---
+  if (ctx.phase === "register-pending") {
+    if (/^[a-z"]$/i.test(key)) {
+      return {
+        newCtx: {
+          ...ctx,
+          phase: "idle",
+          selectedRegister: key === '"' ? null : key.toLowerCase(),
+        },
+        actions: [],
+      };
+    }
+    return {
+      newCtx: { ...ctx, phase: "idle", count: 0 },
+      actions: [],
+    };
+  }
+
   // --- Ctrl key ---
   if (ctrlKey) {
     return handleCtrlKey(key, ctx, buffer);
@@ -104,6 +122,14 @@ export function processVisualMode(
   if (key === "g") {
     return {
       newCtx: { ...ctx, phase: "g-pending" },
+      actions: [],
+    };
+  }
+
+  // --- Register prefix ("x) ---
+  if (key === '"') {
+    return {
+      newCtx: { ...ctx, phase: "register-pending" },
       actions: [],
     };
   }
@@ -268,17 +294,40 @@ function executeVisualOperator(
     width: ctx.indentWidth,
   });
 
+  // Build status message with register name
+  let statusMessage = result.statusMessage || "";
+  if (result.newMode === "insert") {
+    statusMessage = "-- INSERT --";
+  } else if (ctx.selectedRegister && statusMessage) {
+    statusMessage += ` into "${ctx.selectedRegister}`;
+  } else if (ctx.selectedRegister && result.yankedText) {
+    const lines = result.yankedText.split("\n").length - (result.yankedText.endsWith("\n") ? 1 : 0);
+    if (lines >= 1 && operator === "y") {
+      statusMessage = lines >= 2
+        ? `${lines} lines yanked into "${ctx.selectedRegister}`
+        : `yanked into "${ctx.selectedRegister}`;
+    }
+  }
+
+  // Store in named register if selected
+  const registerUpdates: Partial<import("../types").VimContext> = {
+    register: result.yankedText,
+  };
+  if (ctx.selectedRegister) {
+    registerUpdates.registers = {
+      ...ctx.registers,
+      [ctx.selectedRegister]: result.yankedText,
+    };
+  }
+
   return {
     newCtx: {
       ...resetContext(ctx),
       mode: result.newMode,
       cursor: result.newCursor,
-      register: result.yankedText,
+      ...registerUpdates,
       visualAnchor: null,
-      statusMessage:
-        result.newMode === "insert"
-          ? "-- INSERT --"
-          : result.statusMessage || "",
+      statusMessage,
     },
     actions: [
       ...result.actions,
@@ -357,15 +406,29 @@ function executeVisualBlockOperator(
     { type: "yank", text: yankedText },
   ];
 
+  // Named register support
+  const regUpdates: Partial<import("../types").VimContext> = {
+    register: yankedText,
+  };
+  if (ctx.selectedRegister) {
+    regUpdates.registers = {
+      ...ctx.registers,
+      [ctx.selectedRegister]: yankedText,
+    };
+  }
+
   if (operator === "y") {
     const newCursor = { line: startLine, col: startCol };
+    const regSuffix = ctx.selectedRegister ? ` into "${ctx.selectedRegister}` : "";
+    const lineCount = endLine - startLine + 1;
     return {
       newCtx: {
         ...resetContext(ctx),
         mode: "normal",
         cursor: newCursor,
-        register: yankedText,
+        ...regUpdates,
         visualAnchor: null,
+        statusMessage: lineCount >= 2 ? `${lineCount} lines yanked${regSuffix}` : regSuffix ? `yanked${regSuffix}` : "",
       },
       actions: [
         ...actions,
@@ -393,7 +456,7 @@ function executeVisualBlockOperator(
       ...resetContext(ctx),
       mode: newMode as import("../types").VimMode,
       cursor: newCursor,
-      register: yankedText,
+      ...regUpdates,
       visualAnchor: null,
       statusMessage: newMode === "insert" ? "-- INSERT --" : "",
     },

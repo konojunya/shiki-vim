@@ -75,6 +75,16 @@ function getRegisterText(ctx: VimContext): string {
 }
 
 /**
+ * Append register name to a status message if a named register is selected.
+ */
+function withRegisterInfo(ctx: VimContext, msg: string): string {
+  if (ctx.selectedRegister && msg) {
+    return `${msg} into "${ctx.selectedRegister}`;
+  }
+  return msg;
+}
+
+/**
  * Main handler for normal mode.
  * Receives a keystroke and returns state transitions and actions.
  */
@@ -406,7 +416,7 @@ function handleOperatorPending(
         mode: result.newMode,
         cursor: result.newCursor,
         ...storeRegister(ctx, result.yankedText),
-        statusMessage: result.statusMessage,
+        statusMessage: withRegisterInfo(ctx, result.statusMessage),
       },
       actions: [
         ...result.actions,
@@ -456,7 +466,7 @@ function handleOperatorPending(
           mode: result.newMode,
           cursor: result.newCursor,
           ...storeRegister(ctx, result.yankedText),
-          statusMessage: result.statusMessage,
+          statusMessage: withRegisterInfo(ctx, result.statusMessage),
         },
         actions: [
           ...result.actions,
@@ -499,7 +509,7 @@ function handleOperatorPending(
         mode: result.newMode,
         cursor: result.newCursor,
         ...storeRegister(ctx, result.yankedText),
-        statusMessage: result.statusMessage,
+        statusMessage: withRegisterInfo(ctx, result.statusMessage),
       },
       actions: [
         ...result.actions,

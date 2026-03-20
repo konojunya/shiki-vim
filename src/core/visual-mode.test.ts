@@ -44,6 +44,21 @@ function createVisualLineContext(
   };
 }
 
+/** Create a VimContext in visual-block mode for testing */
+function createBlockContext(
+  cursor: CursorPosition,
+  anchor: CursorPosition,
+  overrides?: Partial<VimContext>,
+): VimContext {
+  return {
+    ...createInitialContext(cursor),
+    mode: "visual-block",
+    visualAnchor: { ...anchor },
+    statusMessage: "-- VISUAL BLOCK --",
+    ...overrides,
+  };
+}
+
 /** Process multiple keys in sequence and return the final state */
 function pressKeys(
   keys: string[],
@@ -337,20 +352,6 @@ describe("Visual mode", () => {
   // Visual block mode (Ctrl-V)
   // ---------------------------------------------------
   describe("Visual block mode", () => {
-    function createBlockContext(
-      cursor: CursorPosition,
-      anchor: CursorPosition,
-      overrides?: Partial<VimContext>,
-    ): VimContext {
-      return {
-        ...createInitialContext(cursor),
-        mode: "visual-block",
-        visualAnchor: { ...anchor },
-        statusMessage: "-- VISUAL BLOCK --",
-        ...overrides,
-      };
-    }
-
     it("enters visual-block mode with Ctrl-V", () => {
       const buffer = new TextBuffer("hello\nworld");
       const ctx = createInitialContext({ line: 0, col: 0 });
@@ -559,6 +560,67 @@ describe("Visual mode", () => {
       expect(buffer.getLine(1)).toBe("def");   // reverted
       expect(buffer.getLine(2)).toBe("ghi");   // reverted
       expect(afterUndo.mode).toBe("normal");
+    });
+  });
+
+  // ---------------------------------------------------
+  // Named registers in visual mode
+  // ---------------------------------------------------
+  describe("Named registers in visual mode", () => {
+    it('"ay yanks into named register a with status message', () => {
+      const buffer = new TextBuffer("line1\nline2\nline3\nline4");
+      const ctx = createVisualContext(
+        { line: 2, col: 0 },
+        { line: 0, col: 0 },
+        { mode: "visual-line" },
+      );
+      const { ctx: result } = pressKeys(['"', "a", "y"], ctx, buffer);
+      expect(result.mode).toBe("normal");
+      expect(result.register).toBe("line1\nline2\nline3\n");
+      expect(result.registers.a).toBe("line1\nline2\nline3\n");
+      expect(result.statusMessage).toBe('3 lines yanked into "a');
+    });
+
+    it('"ay then yy then "ap pastes from register a', () => {
+      const buffer = new TextBuffer("aaa\nbbb\nccc");
+      // Visual select line 0, "ay
+      const ctx = createVisualContext(
+        { line: 0, col: 0 },
+        { line: 0, col: 0 },
+        { mode: "visual-line" },
+      );
+      const { ctx: afterAy } = pressKeys(['"', "a", "y"], ctx, buffer);
+      expect(afterAy.registers.a).toBe("aaa\n");
+      // yy on line 1 -> overwrites unnamed
+      const { ctx: afterYy } = pressKeys(["j", "y", "y"], afterAy, buffer);
+      expect(afterYy.register).toBe("bbb\n");
+      // "ap on line 2 -> paste from register a
+      const { ctx: onLine2 } = pressKeys(["j"], afterYy, buffer);
+      pressKeys(['"', "a", "p"], onLine2, buffer);
+      expect(buffer.getContent()).toBe("aaa\nbbb\nccc\naaa");
+    });
+
+    it('"bd in visual mode deletes into register b', () => {
+      const buffer = new TextBuffer("hello world");
+      const ctx = createVisualContext(
+        { line: 0, col: 4 },
+        { line: 0, col: 0 },
+      );
+      const { ctx: result } = pressKeys(['"', "b", "d"], ctx, buffer);
+      expect(buffer.getContent()).toBe(" world");
+      expect(result.registers.b).toBe("hello");
+      expect(result.register).toBe("hello");
+    });
+
+    it("visual block yank into named register", () => {
+      const buffer = new TextBuffer("abcde\nfghij\nklmno");
+      const ctx = createBlockContext(
+        { line: 1, col: 2 },
+        { line: 0, col: 1 },
+      );
+      const { ctx: result } = pressKeys(['"', "c", "y"], ctx, buffer);
+      expect(result.registers.c).toBe("bc\ngh");
+      expect(result.statusMessage).toBe('2 lines yanked into "c');
     });
   });
 });
