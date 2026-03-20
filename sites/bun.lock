@@ -6,7 +6,7 @@
       "dependencies": {
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "react.vim": "0.0.1",
+        "react.vim": "1.0.0",
         "shiki": "^3.0.0",
       },
       "devDependencies": {
@@ -297,7 +297,7 @@
 
     "react-refresh": ["react-refresh@0.17.0", "", {}, "sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ=="],
 
-    "react.vim": ["react.vim@0.0.1", "", { "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0", "shiki": ">=1.0.0" } }, "sha512-3WAMVQQSVdhL1YN6ubeA/2ugFq54lM2PuI7PDJPDCaw80xkIjcopvzQ7jyJ6Tc6gZFLtWW1U+VGeJNnt9MSPmg=="],
+    "react.vim": ["react.vim@1.0.0", "", { "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0", "shiki": ">=1.0.0" } }, "sha512-Yeo8whBkmuDjuSqabvP/ZJbBXl68rMYrO2qkgk+ALZ1ri7UxCr46t85hAZtX5iwnNS8R1igdJdxoirk3k30chA=="],
 
     "regex": ["regex@6.1.0", "", { "dependencies": { "regex-utilities": "^2.3.0" } }, "sha512-6VwtthbV4o/7+OaAF9I5L5V3llLEsoPyq9P1JVXkedTP33c7MfCG0/5NOPcSJn0TzXcG9YUrR0gQSWioew3LDg=="],
 
