@@ -1,5 +1,17 @@
 # react.vim
 
+## 1.0.1
+
+### Patch Changes
+
+- [#30](https://github.com/konojunya/react.vim/pull/30) [`b83a96f`](https://github.com/konojunya/react.vim/commit/b83a96fbd53ba51a1b59104ebc3401d3e98a063a) Thanks [@konojunya](https://github.com/konojunya)! - ### Bug Fixes
+
+  - fix: site origin ([#29](https://github.com/konojunya/react.vim/issues/29))
+
+  ### Chores
+
+  - chore: website using v1.0.0 ([#28](https://github.com/konojunya/react.vim/issues/28))
+
 ## 1.0.0
 
 ### Major Changes
