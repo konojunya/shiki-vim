@@ -86,6 +86,9 @@ function handleEscape(ctx: VimContext, buffer: TextBuffer): KeystrokeResult {
     const insertedText = firstLine.slice(col, ctx.cursor.col);
 
     if (insertedText.length > 0) {
+      // Save undo point so the entire block replication can be undone at once
+      buffer.saveUndoPoint(ctx.cursor);
+
       // Insert the same text at the same column on the remaining lines
       for (let l = startLine; l <= endLine; l++) {
         if (l === cursorAtInsertStart.line) continue;

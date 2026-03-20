@@ -540,5 +540,25 @@ describe("Visual mode", () => {
       expect(buffer.getLine(1)).toBe("ab  X"); // padded with spaces, nothing after
       expect(buffer.getLine(2)).toBe("abcdXef");
     });
+
+    it("block insert can be undone with u", () => {
+      const buffer = new TextBuffer("abc\ndef\nghi");
+      const ctx = createBlockContext(
+        { line: 2, col: 1 },
+        { line: 0, col: 0 },
+      );
+      const { ctx: insertCtx } = pressKeys(["Shift", "I"], ctx, buffer);
+      const { ctx: afterType } = pressKeys(["X"], insertCtx, buffer);
+      const { ctx: afterEsc } = pressKeys(["Escape"], afterType, buffer);
+      expect(buffer.getLine(0)).toBe("Xabc");
+      expect(buffer.getLine(1)).toBe("Xdef");
+      expect(buffer.getLine(2)).toBe("Xghi");
+      // Undo the block replication
+      const { ctx: afterUndo } = pressKeys(["u"], afterEsc, buffer);
+      expect(buffer.getLine(0)).toBe("Xabc"); // first line typed directly
+      expect(buffer.getLine(1)).toBe("def");   // reverted
+      expect(buffer.getLine(2)).toBe("ghi");   // reverted
+      expect(afterUndo.mode).toBe("normal");
+    });
   });
 });
