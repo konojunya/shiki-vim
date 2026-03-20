@@ -1,5 +1,6 @@
 # shiki-vim
 
+[![CI](https://github.com/konojunya/shiki-vim/actions/workflows/ci.yaml/badge.svg)](https://github.com/konojunya/shiki-vim/actions/workflows/ci.yaml)
 [![npm version](https://img.shields.io/npm/v/shiki-vim)](https://www.npmjs.com/package/shiki-vim)
 [![license](https://img.shields.io/npm/l/shiki-vim)](./LICENSE)
 
