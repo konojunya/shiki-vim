@@ -1,50 +1,113 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>react.vim - Vim-powered code editor component for React</title>
-    <meta name="description" content="A lightweight, vim-like code editor React component with Shiki syntax highlighting. Drop-in vim keybindings for your React app." />
+    <meta
+      name="description"
+      content="A lightweight, vim-like code editor React component with Shiki syntax highlighting. Drop-in vim keybindings for your React app."
+    />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <meta property="og:title" content="react.vim" />
-    <meta property="og:description" content="Vim-powered code editor component for React with Shiki syntax highlighting" />
-    <meta property="og:image" content="https://react.vim.0xjj.dev/ogp.png" />
-    <meta property="og:url" content="https://react.vim.0xjj.dev" />
+    <meta
+      property="og:description"
+      content="Vim-powered code editor component for React with Shiki syntax highlighting"
+    />
+    <meta property="og:image" content="https://react-vim.0xjj.dev/ogp.png" />
+    <meta property="og:url" content="https://react-vim.0xjj.dev" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="react.vim" />
-    <meta name="twitter:description" content="Vim-powered code editor component for React with Shiki syntax highlighting" />
-    <meta name="twitter:image" content="https://react.vim.0xjj.dev/ogp.png" />
+    <meta
+      name="twitter:description"
+      content="Vim-powered code editor component for React with Shiki syntax highlighting"
+    />
+    <meta name="twitter:image" content="https://react-vim.0xjj.dev/ogp.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      html { scroll-behavior: smooth; }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
       body {
         -webkit-font-smoothing: antialiased;
-        background-color: #0A0F1A;
+        background-color: #0a0f1a;
       }
       body::before {
         content: "";
         position: fixed;
         inset: 0;
-        background-image: linear-gradient(rgba(10,20,40,0.35), rgba(10,20,40,0.35)), url("/background.svg");
+        background-image: linear-gradient(
+            rgba(10, 20, 40, 0.35),
+            rgba(10, 20, 40, 0.35)
+          ),
+          url("/background.svg");
         background-repeat: no-repeat;
         background-position: left center;
         background-size: cover;
         z-index: 0;
       }
-      #root { position: relative; z-index: 1; height: 100dvh; overflow-y: auto; }
-      @media (max-width: 480px) {
-        .hero-title { font-size: 28px !important; min-height: 100px !important; }
-        .hero-section { padding-bottom: 20vh !important; }
+      #root {
+        position: relative;
+        z-index: 1;
+        height: 100dvh;
+        overflow-y: auto;
       }
-      @keyframes spin { to { transform: rotate(360deg); } }
-      .quick-start pre { background: transparent !important; margin: 0; padding: 0; }
-      @keyframes toast-in { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-      @keyframes vim-blink { 50% { opacity: 0; } }
-      @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+      @media (max-width: 480px) {
+        .hero-title {
+          font-size: 28px !important;
+          min-height: 100px !important;
+        }
+        .hero-section {
+          padding-bottom: 20vh !important;
+        }
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .quick-start pre {
+        background: transparent !important;
+        margin: 0;
+        padding: 0;
+      }
+      @keyframes toast-in {
+        from {
+          opacity: 0;
+          transform: translateX(-50%) translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+      }
+      @keyframes vim-blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
     </style>
   </head>
   <body>

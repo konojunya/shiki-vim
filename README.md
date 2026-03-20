@@ -7,8 +7,8 @@
 </p>
 
 <p align="center">
-  <a href="https://react.vim.0xjj.dev">Documentation</a> ·
-  <a href="https://react.vim.0xjj.dev/#playground">Playground</a> ·
+  <a href="https://react-vim.0xjj.dev">Documentation</a> ·
+  <a href="https://react-vim.0xjj.dev/#playground">Playground</a> ·
   <a href="https://www.npmjs.com/package/react.vim">npm</a>
 </p>
 
@@ -73,7 +73,7 @@ function App() {
 }
 ```
 
-> [Try it live in the playground](https://react.vim.0xjj.dev/#playground)
+> [Try it live in the playground](https://react-vim.0xjj.dev/#playground)
 
 ## Props
 
