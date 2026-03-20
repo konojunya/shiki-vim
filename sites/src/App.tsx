@@ -324,12 +324,14 @@ function App() {
           Shiki highlighting, and zero configuration.
         </p>
 
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", alignItems: "center", marginTop: 28 }}>
-          <a href="#playground" style={ctaBtn}>
+        <div style={{ display: "inline-flex", flexDirection: "column", gap: 12, alignItems: "stretch", marginTop: 28 }}>
+          <a href="#playground" style={{ ...ctaBtn, textAlign: "center" }}>
             Try it live
           </a>
-          <code style={installBadge}>npm i shiki-vim</code>
-          <Pill>v{__SHIKI_VIM_VERSION__}</Pill>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "center" }}>
+            <code style={installBadge}>npm i shiki-vim</code>
+            <Pill>v{__SHIKI_VIM_VERSION__}</Pill>
+          </div>
         </div>
       </section>
 
