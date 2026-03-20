@@ -181,14 +181,14 @@ function handleEnter(
 }
 
 /**
- * Tab: Insert two spaces.
- * TODO: Make indent width configurable
+ * Tab: Insert indentation based on context settings.
  */
 function handleTab(
   ctx: VimContext,
   buffer: TextBuffer,
 ): KeystrokeResult {
-  const indent = "  "; // 2 spaces
+  const indent =
+    ctx.indentStyle === "tab" ? "\t" : " ".repeat(ctx.indentWidth);
   buffer.insertAt(ctx.cursor.line, ctx.cursor.col, indent);
   const newCursor = {
     line: ctx.cursor.line,

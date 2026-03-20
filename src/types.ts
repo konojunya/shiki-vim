@@ -55,6 +55,8 @@ export interface VimContext {
   searchDirection: "forward" | "backward";
   charCommand: CharCommand | null;
   statusMessage: string;
+  indentStyle: "space" | "tab";
+  indentWidth: number;
 }
 
 /**
@@ -111,6 +113,10 @@ export interface ShikiVimProps {
   readOnly?: boolean;
   /** Whether the editor should be focused on mount */
   autoFocus?: boolean;
+  /** Indent style: "space" or "tab". Default: "space" */
+  indentStyle?: "space" | "tab";
+  /** Number of spaces (or tab width) per indent level. Default: 2 */
+  indentWidth?: number;
   /** Whether to show line numbers. Default: true */
   showLineNumbers?: boolean;
 }

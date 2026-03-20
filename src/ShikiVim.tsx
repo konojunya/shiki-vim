@@ -54,6 +54,8 @@ export default function ShikiVim({
   className,
   readOnly = false,
   autoFocus = false,
+  indentStyle,
+  indentWidth,
   showLineNumbers = true,
 }: ShikiVimProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -73,6 +75,8 @@ export default function ShikiVim({
     onSave,
     onModeChange,
     onAction,
+    indentStyle,
+    indentWidth,
   });
 
   // --- Shiki tokenization ---
@@ -91,6 +95,22 @@ export default function ShikiVim({
   // --- Calculate gutter width for line numbers ---
   const totalLines = tokenLines.length;
   const gutterWidth = String(totalLines).length;
+
+  // --- Calculate visual column (accounting for tab width) ---
+  const visualCol = useMemo(() => {
+    const lines = engine.content.split("\n");
+    const line = lines[engine.cursor.line] ?? "";
+    const tabSize = 4;
+    let col = 0;
+    for (let i = 0; i < engine.cursor.col && i < line.length; i++) {
+      if (line[i] === "\t") {
+        col += tabSize - (col % tabSize);
+      } else {
+        col++;
+      }
+    }
+    return col;
+  }, [engine.content, engine.cursor.line, engine.cursor.col]);
 
   // --- Calculate visual selection range ---
   const selectionInfo = useMemo(() => {
@@ -163,6 +183,7 @@ export default function ShikiVim({
         {/* Cursor (overlay) */}
         <Cursor
           position={engine.cursor}
+          visualCol={visualCol}
           mode={engine.mode}
           showLineNumbers={effectiveShowLineNumbers}
           gutterWidth={gutterWidth}

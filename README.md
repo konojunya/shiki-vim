@@ -89,6 +89,8 @@ function App() {
 | `cursorPosition` | `string` | `"1:1"` | Initial cursor position (`"line:col"`, 1-based) |
 | `readOnly` | `boolean` | `false` | Disable editing (motions still work) |
 | `autoFocus` | `boolean` | `false` | Focus the editor on mount |
+| `indentStyle` | `"space" \| "tab"` | `"space"` | Use spaces or tabs for indentation |
+| `indentWidth` | `number` | `2` | Number of spaces (or tab width) per indent level |
 | `showLineNumbers` | `boolean` | `true` | Show line number gutter |
 | `className` | `string` | — | Additional class for the container |
 

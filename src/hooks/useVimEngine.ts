@@ -39,6 +39,10 @@ export interface VimEngineOptions {
   onModeChange?: (mode: VimMode) => void;
   /** Callback for every action emitted by the vim engine */
   onAction?: (action: VimAction, key: string) => void;
+  /** Indent style: "space" or "tab" */
+  indentStyle?: "space" | "tab";
+  /** Number of spaces (or tab width) per indent level */
+  indentWidth?: number;
 }
 
 /** Return value of useVimEngine */
@@ -79,6 +83,8 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
     onSave,
     onModeChange,
     onAction,
+    indentStyle,
+    indentWidth,
   } = options;
 
   // TextBuffer is managed via ref (due to frequent mutations)
@@ -86,7 +92,7 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
 
   // VimContext is also managed via ref (parser intermediate state does not need rendering)
   const ctxRef = useRef<VimContext>(
-    createInitialContext(parseCursorPosition(cursorPosition)),
+    createInitialContext(parseCursorPosition(cursorPosition), { indentStyle, indentWidth }),
   );
 
   // Display-related state

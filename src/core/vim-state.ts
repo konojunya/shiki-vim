@@ -28,7 +28,10 @@ export interface KeystrokeResult {
  * Generate the initial VimContext value.
  * Called once when the component mounts.
  */
-export function createInitialContext(cursor: CursorPosition): VimContext {
+export function createInitialContext(
+  cursor: CursorPosition,
+  opts?: { indentStyle?: "space" | "tab"; indentWidth?: number },
+): VimContext {
   return {
     mode: "normal",
     phase: "idle",
@@ -43,6 +46,8 @@ export function createInitialContext(cursor: CursorPosition): VimContext {
     searchDirection: "forward",
     charCommand: null,
     statusMessage: "",
+    indentStyle: opts?.indentStyle ?? "space",
+    indentWidth: opts?.indentWidth ?? 2,
   };
 }
 
