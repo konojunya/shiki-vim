@@ -40,8 +40,9 @@ jobs:
         uses: changesets/action@v1
         with:
           version: bunx changeset version
-          publish: bash scripts/publish.sh
+          publish: bunx changeset publish
           title: "chore: release"
           commit: "chore: release"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
