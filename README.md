@@ -1,17 +1,40 @@
-# shiki-vim
+<p align="center">
+  <img src="sites/public/icon.svg" alt="shiki-vim" width="80" />
+</p>
 
-[![CI](https://github.com/konojunya/shiki-vim/actions/workflows/ci.yaml/badge.svg)](https://github.com/konojunya/shiki-vim/actions/workflows/ci.yaml)
-[![npm version](https://img.shields.io/npm/v/shiki-vim)](https://www.npmjs.com/package/shiki-vim)
-[![license](https://img.shields.io/npm/l/shiki-vim)](./LICENSE)
+<h1 align="center">shiki-vim</h1>
 
-Vim keybindings for your React app. A lightweight code editor component with [Shiki](https://shiki.style/) syntax highlighting.
+<p align="center">
+  Vim-powered code editor component for React with Shiki syntax highlighting.
+</p>
 
-## Why shiki-vim?
+<p align="center">
+  <a href="https://shiki-vim.0xjj.dev">Documentation</a> ·
+  <a href="https://shiki-vim.0xjj.dev/#playground">Playground</a> ·
+  <a href="https://www.npmjs.com/package/shiki-vim">npm</a>
+</p>
 
-- **Shiki-powered highlighting** — Same engine as VS Code. Any Shiki theme and language works out of the box.
-- **Vim keybindings** — Motions, operators, visual mode, search, and more. Designed to feel natural to vim users.
-- **Just a React component** — Drop it in with `<ShikiVim />`. No wrapper, no adapter, no framework lock-in.
-- **Callback-driven** — `onSave`, `onYank`, `onChange` — you decide what happens. Clipboard, server sync, whatever you want.
+<p align="center">
+  <a href="https://github.com/konojunya/shiki-vim/actions/workflows/ci.yaml"><img src="https://github.com/konojunya/shiki-vim/actions/workflows/ci.yaml/badge.svg" alt="CI" /></a>
+  <a href="https://www.npmjs.com/package/shiki-vim"><img src="https://img.shields.io/npm/v/shiki-vim" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/shiki-vim"><img src="https://img.shields.io/npm/dm/shiki-vim" alt="npm downloads" /></a>
+  <a href="https://bundlephobia.com/package/shiki-vim"><img src="https://img.shields.io/bundlephobia/minzip/shiki-vim" alt="bundle size" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/npm/l/shiki-vim" alt="license" /></a>
+</p>
+
+---
+
+Drop-in `<ShikiVim />` component with real Vim modes, [Shiki](https://shiki.style/) highlighting, and zero configuration.
+
+## Features
+
+- **Real Vim Keybindings** — Normal, Insert, Visual, Command-line modes. Motions, operators, counts — it all works.
+- **Shiki Highlighting** — 60+ themes, 200+ languages. Same engine powering VS Code.
+- **Read-Only Mode** — `readOnly` prop for a zero-config code viewer with navigation & search.
+- **Tiny & Focused** — No heavy deps. React + Shiki. Tree-shakeable ESM, full TypeScript types.
+- **Search** — `/` and `?` for forward/backward regex search. `n` and `N` to jump between matches.
+- **Undo / Redo** — `u` and `Ctrl-R` with cursor restore. Multi-level undo stack.
+- **Callback-driven** — `onSave`, `onYank`, `onChange`, `onModeChange` — you decide what happens.
 - **Customizable** — CSS variables for theming. Shiki options are passed through transparently.
 
 ## Install
@@ -29,7 +52,6 @@ import ShikiVim from "shiki-vim";
 import "shiki-vim/styles.css";
 import { createHighlighter } from "shiki";
 
-// Create a highlighter (do this once, outside your component)
 const highlighter = await createHighlighter({
   themes: ["vitesse-dark"],
   langs: ["typescript"],
@@ -43,39 +65,40 @@ function App() {
       lang="typescript"
       theme="vitesse-dark"
       onSave={(content) => {
-        // :w triggers this
         fetch("/api/save", { method: "POST", body: content });
       }}
       onYank={(text) => {
-        // yy, dw, etc. trigger this
         navigator.clipboard.writeText(text);
-      }}
-      onChange={(content) => {
-        // Every edit triggers this
-        console.log("content changed:", content.length, "chars");
       }}
     />
   );
 }
 ```
 
+> [Try it live in the playground](https://shiki-vim.0xjj.dev/#playground)
+
 ## Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `content` | `string` | *required* | The content to display and edit |
+| `content` | `string` | *required* | The code to display and edit |
 | `highlighter` | `HighlighterCore` | *required* | Shiki highlighter instance |
 | `lang` | `string` | *required* | Language for syntax highlighting |
-| `theme` | `string` | *required* | Theme for syntax highlighting |
-| `shikiOptions` | `Record<string, unknown>` | — | Additional options passed directly to Shiki's `codeToTokens` |
+| `theme` | `string` | *required* | Shiki theme name |
+| `shikiOptions` | `Record<string, unknown>` | — | Additional options passed to Shiki's `codeToTokens` |
 | `cursorPosition` | `string` | `"1:1"` | Initial cursor position (`"line:col"`, 1-based) |
-| `onChange` | `(content: string) => void` | — | Called on every content change |
-| `onYank` | `(text: string) => void` | — | Called when text is yanked (`yy`, `dw`, etc.) |
-| `onSave` | `(content: string) => void` | — | Called on `:w` |
-| `onModeChange` | `(mode: VimMode) => void` | — | Called when vim mode changes |
-| `className` | `string` | — | Additional class name for the container |
 | `readOnly` | `boolean` | `false` | Disable editing (motions still work) |
-| `showLineNumbers` | `boolean` | `true` | Show line numbers |
+| `showLineNumbers` | `boolean` | `true` | Show line number gutter |
+| `className` | `string` | — | Additional class for the container |
+
+### Callbacks
+
+| Prop | Signature | Trigger |
+|------|-----------|---------|
+| `onChange` | `(content: string) => void` | Any content edit |
+| `onYank` | `(text: string) => void` | Text yanked (`yy`, `dw`, etc.) |
+| `onSave` | `(content: string) => void` | `:w` command |
+| `onModeChange` | `(mode: VimMode) => void` | Mode transition |
 
 ## Keybindings
 
@@ -123,18 +146,13 @@ function App() {
 | `u` | Undo |
 | `Ctrl-R` | Redo |
 
-### Search
+### Search & Commands
 
 | Key | Action |
 |-----|--------|
 | `/{pattern}` | Search forward (regex) |
 | `?{pattern}` | Search backward (regex) |
 | `n` / `N` | Next / Previous match |
-
-### Scroll & Commands
-
-| Key | Action |
-|-----|--------|
 | `Ctrl-U` / `Ctrl-D` | Half page up / down |
 | `:w` | Save |
 | `:{number}` | Go to line |
@@ -164,7 +182,6 @@ For advanced use cases, the internal hooks are exported:
 ```tsx
 import { useVimEngine, useShikiTokens } from "shiki-vim";
 
-// Build your own editor UI with the vim engine
 const engine = useVimEngine({
   content: "hello world",
   onSave: (content) => { /* ... */ },
@@ -192,12 +209,14 @@ Contributions welcome for any of these:
 ```bash
 bun install
 bun run dev         # Watch mode
-bun run test        # Run tests (345 cases)
+bun run test        # Run tests (360 cases)
 bun run typecheck   # Type check
 bun run lint        # oxlint
 bun run fmt         # oxfmt
 ```
 
+PRs are welcome! Please make sure `bun run test` and `bun run typecheck` pass before submitting.
+
 ## License
 
-[MIT](./LICENSE)
+[MIT](./LICENSE) &copy; [JJ](https://github.com/konojunya)
