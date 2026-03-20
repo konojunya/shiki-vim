@@ -310,7 +310,7 @@ function App() {
 
       {/* ---- Hero ---- */}
       <section style={hero}>
-        <Pill>v0.0.1 &mdash; MIT License</Pill>
+        <Pill>v{__SHIKI_VIM_VERSION__} &mdash; MIT License</Pill>
 
         <h1 style={heroTitle}>
           <VimTyper />
