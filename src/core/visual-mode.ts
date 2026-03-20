@@ -65,7 +65,7 @@ export function processVisualMode(
   // --- Motion ---
   const count = getEffectiveCount(ctx);
   const countExplicit = isCountExplicit(ctx);
-  const motion = resolveMotion(key, ctx.cursor, buffer, count, countExplicit);
+  const motion = resolveMotion(key, ctx.cursor, buffer, count, countExplicit, ctx);
   if (motion) {
     return {
       newCtx: {
@@ -210,7 +210,9 @@ function executeVisualOperator(
       register: result.yankedText,
       visualAnchor: null,
       statusMessage:
-        result.newMode === "insert" ? "-- INSERT --" : "",
+        result.newMode === "insert"
+          ? "-- INSERT --"
+          : result.statusMessage || "",
     },
     actions: [
       ...result.actions,

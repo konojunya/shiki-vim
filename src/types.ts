@@ -54,9 +54,15 @@ export interface VimContext {
   lastSearch: string;
   searchDirection: "forward" | "backward";
   charCommand: CharCommand | null;
+  /** Last f/F/t/T command and character for ; and , repeat */
+  lastCharSearch: { command: "f" | "F" | "t" | "T"; char: string } | null;
   statusMessage: string;
   indentStyle: "space" | "tab";
   indentWidth: number;
+  /** First visible line in the viewport (0-based) */
+  viewportTopLine: number;
+  /** Number of visible lines in the viewport */
+  viewportHeight: number;
 }
 
 /**

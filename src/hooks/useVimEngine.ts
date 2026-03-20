@@ -65,8 +65,10 @@ export interface VimEngineState {
   lastSearch: string;
   /** Keyboard event handler */
   handleKeyDown: (e: React.KeyboardEvent) => void;
-  /** Scroll event handler (for half-page scrolling) */
-  handleScroll: (direction: "up" | "down", visibleLines: number) => void;
+  /** Scroll event handler (for page scrolling) */
+  handleScroll: (direction: "up" | "down", visibleLines: number, amount?: number) => void;
+  /** Update the viewport info for H/M/L motions */
+  updateViewport: (topLine: number, height: number) => void;
 }
 
 /**
@@ -159,6 +161,7 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
       }
 
       // State that is always synced from VimContext
+      setCursor(newCtx.cursor);
       setStatusMessage(newCtx.statusMessage);
       setVisualAnchor(newCtx.visualAnchor);
       setCommandLine(
@@ -205,19 +208,21 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
   );
 
   /**
-   * Scroll handler (for Ctrl-U/D).
-   * Receives the number of visible lines from the component and updates the cursor and scroll position.
+   * Scroll handler (for Ctrl-U/D/B/F).
+   * @param direction - Scroll direction
+   * @param visibleLines - Number of visible lines in the viewport
+   * @param amount - Fraction of the page to scroll (0.5 = half, 1.0 = full)
    */
   const handleScroll = useCallback(
-    (direction: "up" | "down", visibleLines: number) => {
-      const halfPage = Math.max(1, Math.floor(visibleLines / 2));
+    (direction: "up" | "down", visibleLines: number, amount: number = 0.5) => {
+      const scrollLines = Math.max(1, Math.floor(visibleLines * amount));
       const buffer = bufferRef.current;
       const ctx = ctxRef.current;
 
       const newLine =
         direction === "up"
-          ? Math.max(0, ctx.cursor.line - halfPage)
-          : Math.min(buffer.getLineCount() - 1, ctx.cursor.line + halfPage);
+          ? Math.max(0, ctx.cursor.line - scrollLines)
+          : Math.min(buffer.getLineCount() - 1, ctx.cursor.line + scrollLines);
 
       const maxCol = Math.max(0, buffer.getLineLength(newLine) - 1);
       const newCursor = {
@@ -227,6 +232,20 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
 
       ctxRef.current = { ...ctx, cursor: newCursor };
       setCursor(newCursor);
+    },
+    [],
+  );
+
+  /**
+   * Update the viewport information (called from the component on scroll/resize).
+   */
+  const updateViewport = useCallback(
+    (topLine: number, height: number) => {
+      ctxRef.current = {
+        ...ctxRef.current,
+        viewportTopLine: topLine,
+        viewportHeight: height,
+      };
     },
     [],
   );
@@ -242,6 +261,7 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
     lastSearch: ctxRef.current.lastSearch,
     handleKeyDown,
     handleScroll,
+    updateViewport,
   };
 }
 
@@ -260,7 +280,7 @@ export function useVimEngine(options: VimEngineOptions): VimEngineState {
 function shouldPreventDefault(e: React.KeyboardEvent): boolean {
   // Ctrl key combinations
   if (e.ctrlKey) {
-    const ctrlKeys = ["r", "d", "u"];
+    const ctrlKeys = ["r", "b", "f", "d", "u"];
     if (ctrlKeys.includes(e.key)) return true;
   }
 

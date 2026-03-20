@@ -33,7 +33,14 @@ import { handleCtrlKey } from "./ctrl-keys";
 import { resolveMotion } from "./motion-resolver";
 import { executeOperatorOnRange, executeLineOperator } from "./operators";
 import { handleCharPending } from "./char-pending";
-import { motionGG, motionDollar } from "./motions";
+import {
+  motionGG,
+  motionDollar,
+  motionFChar,
+  motionFCharBack,
+  motionTChar,
+  motionTCharBack,
+} from "./motions";
 import { searchInBuffer } from "./search";
 
 /**
@@ -173,6 +180,16 @@ export function processNormalMode(
     return handleSearchRepeat(key, ctx, buffer);
   }
 
+  // --- * / #: search word under cursor ---
+  if (key === "*" || key === "#") {
+    return handleWordSearch(key, ctx, buffer);
+  }
+
+  // --- ; / ,: repeat last f/F/t/T ---
+  if (key === ";" || key === ",") {
+    return handleCharSearchRepeat(key, ctx, buffer);
+  }
+
   // --- J: join lines ---
   if (key === "J") {
     return handleJoinLines(ctx, buffer);
@@ -217,6 +234,7 @@ function handleGPending(
           mode: opResult.newMode,
           cursor: opResult.newCursor,
           register: opResult.yankedText,
+          statusMessage: opResult.statusMessage,
         },
         actions: [
           ...opResult.actions,
@@ -270,6 +288,7 @@ function handleOperatorPending(
         mode: result.newMode,
         cursor: result.newCursor,
         register: result.yankedText,
+        statusMessage: result.statusMessage,
       },
       actions: [
         ...result.actions,
@@ -289,6 +308,37 @@ function handleOperatorPending(
     };
   }
 
+  // ; / , repeat last char search with operator (e.g., d;)
+  if ((key === ";" || key === ",") && ctx.lastCharSearch) {
+    const charMotion = resolveCharSearchRepeat(key, ctx, buffer);
+    if (charMotion && (charMotion.cursor.line !== ctx.cursor.line || charMotion.cursor.col !== ctx.cursor.col)) {
+      buffer.saveUndoPoint(ctx.cursor);
+      const result = executeOperatorOnRange(
+        ctx.operator!,
+        charMotion.range,
+        buffer,
+        ctx.cursor,
+      );
+      return {
+        newCtx: {
+          ...resetContext(ctx),
+          mode: result.newMode,
+          cursor: result.newCursor,
+          register: result.yankedText,
+          statusMessage: result.statusMessage,
+        },
+        actions: [
+          ...result.actions,
+          { type: "cursor-move", position: result.newCursor },
+          ...(result.newMode !== ctx.mode
+            ? [{ type: "mode-change" as const, mode: result.newMode }]
+            : []),
+        ],
+      };
+    }
+    return { newCtx: resetContext(ctx), actions: [] };
+  }
+
   // g prefix (e.g., dgg)
   if (key === "g") {
     return {
@@ -300,7 +350,7 @@ function handleOperatorPending(
   // Motion
   const count = getEffectiveCount(ctx);
   const countExplicit = isCountExplicit(ctx);
-  const motion = resolveMotion(key, ctx.cursor, buffer, count, countExplicit);
+  const motion = resolveMotion(key, ctx.cursor, buffer, count, countExplicit, ctx);
 
   if (motion) {
     buffer.saveUndoPoint(ctx.cursor);
@@ -317,6 +367,7 @@ function handleOperatorPending(
         mode: result.newMode,
         cursor: result.newCursor,
         register: result.yankedText,
+        statusMessage: result.statusMessage,
       },
       actions: [
         ...result.actions,
@@ -346,7 +397,7 @@ function tryMotion(
 ): KeystrokeResult | null {
   const count = getEffectiveCount(ctx);
   const countExplicit = isCountExplicit(ctx);
-  const motion = resolveMotion(key, ctx.cursor, buffer, count, countExplicit);
+  const motion = resolveMotion(key, ctx.cursor, buffer, count, countExplicit, ctx);
 
   if (!motion) return null;
 
@@ -490,6 +541,7 @@ function handleDeleteToEndOfLine(
       ...resetContext(ctx),
       cursor: result.newCursor,
       register: result.yankedText,
+      statusMessage: result.statusMessage,
     },
     actions: [
       ...result.actions,
@@ -515,7 +567,7 @@ function handleChangeToEndOfLine(
       mode: "insert",
       cursor: result.newCursor,
       register: result.yankedText,
-      statusMessage: "-- INSERT --",
+      statusMessage: result.statusMessage || "-- INSERT --",
     },
     actions: [
       ...result.actions,
@@ -574,6 +626,7 @@ function handlePasteAfter(
   // Line-wise paste (when the register ends with a newline)
   if (ctx.register.endsWith("\n")) {
     const lines = ctx.register.slice(0, -1).split("\n");
+    const totalLines = lines.length * count;
     for (let i = 0; i < count; i++) {
       for (let j = lines.length - 1; j >= 0; j--) {
         buffer.insertLine(ctx.cursor.line + 1, lines[j]);
@@ -581,7 +634,11 @@ function handlePasteAfter(
     }
     const newCursor = { line: ctx.cursor.line + 1, col: 0 };
     return {
-      newCtx: { ...resetContext(ctx), cursor: newCursor },
+      newCtx: {
+        ...resetContext(ctx),
+        cursor: newCursor,
+        statusMessage: totalLines >= 2 ? `${totalLines} more lines` : "",
+      },
       actions: [
         { type: "content-change", content: buffer.getContent() },
         { type: "cursor-move", position: newCursor },
@@ -621,6 +678,7 @@ function handlePasteBefore(
 
   if (ctx.register.endsWith("\n")) {
     const lines = ctx.register.slice(0, -1).split("\n");
+    const totalLines = lines.length * count;
     for (let i = 0; i < count; i++) {
       for (let j = lines.length - 1; j >= 0; j--) {
         buffer.insertLine(ctx.cursor.line, lines[j]);
@@ -628,7 +686,11 @@ function handlePasteBefore(
     }
     const newCursor = { line: ctx.cursor.line, col: 0 };
     return {
-      newCtx: { ...resetContext(ctx), cursor: newCursor },
+      newCtx: {
+        ...resetContext(ctx),
+        cursor: newCursor,
+        statusMessage: totalLines >= 2 ? `${totalLines} more lines` : "",
+      },
       actions: [
         { type: "content-change", content: buffer.getContent() },
         { type: "cursor-move", position: newCursor },
@@ -659,11 +721,21 @@ function handleUndo(
   ctx: VimContext,
   buffer: TextBuffer,
 ): KeystrokeResult {
+  const linesBefore = buffer.getLineCount();
   const restored = buffer.undo(ctx.cursor);
 
   if (restored) {
+    const linesAfter = buffer.getLineCount();
+    const diff = linesAfter - linesBefore;
+    let statusMessage = "";
+    if (diff >= 2) {
+      statusMessage = `${diff} more lines`;
+    } else if (diff <= -2) {
+      statusMessage = `${Math.abs(diff)} fewer lines`;
+    }
+
     return {
-      newCtx: { ...resetContext(ctx), cursor: restored },
+      newCtx: { ...resetContext(ctx), cursor: restored, statusMessage },
       actions: [
         { type: "content-change", content: buffer.getContent() },
         { type: "cursor-move", position: restored },
@@ -704,6 +776,78 @@ function enterCommandLine(
 /**
  * n / N: Repeat the last search
  */
+/**
+ * * / #: Search for the word under the cursor.
+ * * searches forward, # searches backward.
+ */
+function handleWordSearch(
+  key: string,
+  ctx: VimContext,
+  buffer: TextBuffer,
+): KeystrokeResult {
+  const line = buffer.getLine(ctx.cursor.line);
+  const word = getWordUnderCursor(line, ctx.cursor.col);
+
+  if (!word) {
+    return { newCtx: resetContext(ctx), actions: [] };
+  }
+
+  // Use \b word boundaries for whole-word matching
+  const pattern = `\\b${escapeRegExp(word)}\\b`;
+  const direction = key === "*" ? "forward" : "backward";
+
+  const found = searchInBuffer(buffer, pattern, ctx.cursor, direction);
+
+  if (found) {
+    return {
+      newCtx: {
+        ...resetContext(ctx),
+        cursor: found,
+        lastSearch: pattern,
+        searchDirection: direction === "forward" ? "forward" : "backward",
+      },
+      actions: [{ type: "cursor-move", position: found }],
+    };
+  }
+
+  return {
+    newCtx: {
+      ...resetContext(ctx),
+      statusMessage: `Pattern not found: ${pattern}`,
+    },
+    actions: [
+      { type: "status-message", message: `Pattern not found: ${pattern}` },
+    ],
+  };
+}
+
+/**
+ * Extract the word under the cursor position.
+ */
+function getWordUnderCursor(line: string, col: number): string | null {
+  if (col >= line.length) return null;
+
+  // Check if cursor is on a word character
+  if (!/\w/.test(line[col])) return null;
+
+  // Expand left
+  let start = col;
+  while (start > 0 && /\w/.test(line[start - 1])) start--;
+
+  // Expand right
+  let end = col;
+  while (end < line.length - 1 && /\w/.test(line[end + 1])) end++;
+
+  return line.slice(start, end + 1);
+}
+
+/**
+ * Escape special regex characters in a string.
+ */
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function handleSearchRepeat(
   key: string,
   ctx: VimContext,
@@ -742,6 +886,65 @@ function handleSearchRepeat(
         message: `Pattern not found: ${ctx.lastSearch}`,
       },
     ],
+  };
+}
+
+/**
+ * Resolve the motion for a ; or , repeat of last f/F/t/T.
+ */
+function resolveCharSearchRepeat(
+  key: string,
+  ctx: VimContext,
+  buffer: TextBuffer,
+) {
+  if (!ctx.lastCharSearch) return null;
+
+  const count = getEffectiveCount(ctx);
+  const { command, char } = ctx.lastCharSearch;
+  const reverseMap: Record<string, "f" | "F" | "t" | "T"> = {
+    f: "F", F: "f", t: "T", T: "t",
+  };
+  const effectiveCommand = key === "," ? reverseMap[command] : command;
+
+  switch (effectiveCommand) {
+    case "f":
+      return motionFChar(ctx.cursor, buffer, char, count);
+    case "F":
+      return motionFCharBack(ctx.cursor, buffer, char, count);
+    case "t":
+      return motionTChar(ctx.cursor, buffer, char, count);
+    case "T":
+      return motionTCharBack(ctx.cursor, buffer, char, count);
+    default:
+      return null;
+  }
+}
+
+/**
+ * ; / ,: Repeat last f/F/t/T search
+ * ; repeats in the same direction, , repeats in the opposite direction.
+ */
+function handleCharSearchRepeat(
+  key: string,
+  ctx: VimContext,
+  buffer: TextBuffer,
+): KeystrokeResult {
+  const motion = resolveCharSearchRepeat(key, ctx, buffer);
+
+  if (
+    !motion ||
+    (motion.cursor.line === ctx.cursor.line &&
+      motion.cursor.col === ctx.cursor.col)
+  ) {
+    return { newCtx: resetContext(ctx), actions: [] };
+  }
+
+  return {
+    newCtx: {
+      ...resetContext(ctx),
+      cursor: motion.cursor,
+    },
+    actions: [{ type: "cursor-move", position: motion.cursor }],
   };
 }
 

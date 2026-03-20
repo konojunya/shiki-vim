@@ -25,6 +25,8 @@ export interface OperatorResult {
   newMode: VimMode;
   /** The yanked text */
   yankedText: string;
+  /** Status message to display (e.g. "6 lines yanked") */
+  statusMessage: string;
 }
 
 /**
@@ -68,6 +70,13 @@ function executeLinewiseOperator(
 
   const actions: VimAction[] = [{ type: "yank", text: yankedText }];
 
+  // Status message for 2+ lines (Vim's default report threshold)
+  const statusMessage = lineCount >= 2
+    ? operator === "y"
+      ? `${lineCount} lines yanked`
+      : `${lineCount} fewer lines`
+    : "";
+
   // y (yank) does not delete
   if (operator === "y") {
     return {
@@ -75,6 +84,7 @@ function executeLinewiseOperator(
       newCursor: { line: startLine, col: 0 },
       newMode: "normal",
       yankedText,
+      statusMessage,
     };
   }
 
@@ -97,6 +107,7 @@ function executeLinewiseOperator(
       newCursor: { line: newLine, col: 0 },
       newMode: "insert",
       yankedText,
+      statusMessage,
     };
   }
 
@@ -107,6 +118,7 @@ function executeLinewiseOperator(
     newCursor: { line: newLine, col: 0 },
     newMode: "normal",
     yankedText,
+    statusMessage,
   };
 }
 
@@ -141,17 +153,25 @@ function executeCharwiseOperator(
 
   // y (yank) does not delete
   if (operator === "y") {
+    const yankLines = yankedText.split("\n").length;
     return {
       actions,
       newCursor: { ...start },
       newMode: "normal",
       yankedText,
+      statusMessage: yankLines >= 2 ? `${yankLines} lines yanked` : "",
     };
   }
+
+  // Track line count before deletion for status message
+  const linesBefore = buffer.getLineCount();
 
   // d / c delete the range
   buffer.deleteRange(start.line, start.col, end.line, endCol);
   actions.push({ type: "content-change", content: buffer.getContent() });
+
+  const linesAfter = buffer.getLineCount();
+  const linesRemoved = linesBefore - linesAfter;
 
   // Calculate cursor position
   const newCursor = {
@@ -166,6 +186,7 @@ function executeCharwiseOperator(
     newCursor,
     newMode: operator === "c" ? "insert" : "normal",
     yankedText,
+    statusMessage: linesRemoved >= 2 ? `${linesRemoved} fewer lines` : "",
   };
 }
 

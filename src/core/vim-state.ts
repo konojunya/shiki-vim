@@ -18,6 +18,13 @@ import { processInsertMode } from "./insert-mode";
 import { processVisualMode } from "./visual-mode";
 import { processCommandLineMode } from "./command-line-mode";
 
+/** Modifier-only keys that should be ignored */
+const MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta"]);
+
+function isModifierKey(key: string): boolean {
+  return MODIFIER_KEYS.has(key);
+}
+
 /** Return value of processKeystroke */
 export interface KeystrokeResult {
   newCtx: VimContext;
@@ -45,9 +52,12 @@ export function createInitialContext(
     lastSearch: "",
     searchDirection: "forward",
     charCommand: null,
+    lastCharSearch: null,
     statusMessage: "",
     indentStyle: opts?.indentStyle ?? "space",
     indentWidth: opts?.indentWidth ?? 2,
+    viewportTopLine: 0,
+    viewportHeight: 50,
   };
 }
 
@@ -81,6 +91,12 @@ export function processKeystroke(
   ctrlKey: boolean = false,
   readOnly: boolean = false,
 ): KeystrokeResult {
+  // Ignore modifier-only keys (Shift, Control, Alt, Meta).
+  // These fire as separate keydown events and must not reset state (e.g. count).
+  if (isModifierKey(key)) {
+    return { newCtx: ctx, actions: [] };
+  }
+
   switch (ctx.mode) {
     case "normal":
       return processNormalMode(key, ctx, buffer, ctrlKey, readOnly);
