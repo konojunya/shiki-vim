@@ -291,7 +291,7 @@ function App() {
   return (
     <div style={page}>
       {/* ---- Deprecation Banner ---- */}
-      <div style={{ background: "#f59e0b", color: "#000", textAlign: "center", padding: "10px 16px", fontSize: 14, fontWeight: 600 }}>
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999, background: "#f59e0b", color: "#000", textAlign: "center", padding: "10px 16px", fontSize: 14, fontWeight: 600 }}>
         ⚠️ This project has moved to{" "}
         <a href="https://github.com/vimeejs/vimee" style={{ color: "#000", textDecoration: "underline" }}>
           vimeejs/vimee
